@@ -1,8 +1,11 @@
-**About PyTorch 1.2.0**
-  * Now the master branch supports PyTorch 1.2.0 by default.
-  * Due to the serious version problem (especially torch.utils.data.dataloader), MDSR functions are temporarily disabled. If you have to train/evaluate the MDSR model, please use legacy branches.
+Attempting to do two things with this fork:
 
-# EDSR-PyTorch
+- Make the model greyscale for electron microscopy images
+- Convert the 2D super resolution to be 1D (only one axis of the image is upsampled, the other remains constant). This is of interest for certain 3D microscopy experiments where the voxels are anisotropic (higher resolution in plane, lower resolution along the z axis).
+
+CONDA ENV: `conda create -n edsr python pytorch numpy scikit-image imageio matplotlib tqdm opencv`
+
+# EDSR-PyTorch (Below is from the original repository)
 
 **About PyTorch 1.1.0**
   * There have been minor changes with the 1.1.0 update. Now we support PyTorch 1.1.0 by default, and please use the legacy branch if you prefer older version.
