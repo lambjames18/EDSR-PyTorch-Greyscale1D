@@ -53,13 +53,16 @@ class EDSR(nn.Module):
         self.tail = nn.Sequential(*m_tail)
 
     def forward(self, x):
+        mean_val = x[:, 0, :, :].mean()
         # x = self.sub_mean(x)
+        x = x[:, 0, :, :] - mean_val
         x = self.head(x)
 
         res = self.body(x)
         res += x
 
         x = self.tail(res)
+        x = x[:, 0, :, :] + mean_val
         # x = self.add_mean(x)
 
         return x 
