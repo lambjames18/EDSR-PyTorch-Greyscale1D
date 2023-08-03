@@ -29,7 +29,8 @@
 
 # Test your own images
 # python main.py --data_test Demo --scale 4 --pre_train download --test_only --save_results --n_colors 1
-python main.py --data_test GreyScale --scale 4 --pre_train download --test_only --save_results --n_colors 1
+# python main.py --data_test GreyScale --scale 4 --pre_train download --test_only --save_results --n_colors 1
+python main.py --data_test GreyScale --scale 4 --test_only --save_results --n_colors 1
 
 # Advanced - Test with JPEG images 
 #python main.py --model MDSR --data_test Demo --scale 2+3+4 --pre_train download --test_only --save_results

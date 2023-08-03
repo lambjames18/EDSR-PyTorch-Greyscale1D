@@ -46,7 +46,7 @@ def bg_target(queue):
         if not queue.empty():
             filename, tensor = queue.get()
             if filename is None: break
-            imageio.imwrite(filename, tensor.numpy())
+            imageio.imwrite(filename, np.squeeze(tensor.numpy()))
 
 class checkpoint():
     def __init__(self, args):
@@ -158,7 +158,7 @@ class checkpoint():
             for v, p in zip(save_list, postfix):
                 normalized = v[0].mul(255 / self.args.rgb_range)
                 tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                self.queue.put(('{}{}.png'.format(filename, p), tensor_cpu))
+                self.queue.put(('{}{}.tif'.format(filename, p), tensor_cpu))
 
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
