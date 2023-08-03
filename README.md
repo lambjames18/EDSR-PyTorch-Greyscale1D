@@ -5,6 +5,11 @@ Attempting to do two things with this fork:
 
 CONDA ENV: `conda create -n edsr python pytorch numpy scikit-image imageio matplotlib tqdm opencv`
 
+- Looks like the folder with images needs two subfolders: HR and LR_bicubic, these delineate the ground truth and experimental data for training
+- src/data/srdata.py line 89 specifies "png" as the extension. We likely need to change this to "tif". Not sure what the downstream affects are of this chage though.
+- Need to look for any specification of channels so that we enforce greyscale.
+
+
 # EDSR-PyTorch (Below is from the original repository)
 
 **About PyTorch 1.1.0**

@@ -25,7 +25,7 @@ parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
 parser.add_argument('--data_train', type=str, default='DIV2K',
                     help='train dataset name')
-parser.add_argument('--data_test', type=str, default='DIV2K',
+parser.add_argument('--data_test', type=str, default='GreyScale',
                     help='test dataset name')
 parser.add_argument('--data_range', type=str, default='1-800/801-810',
                     help='train/test data range')
@@ -37,7 +37,7 @@ parser.add_argument('--patch_size', type=int, default=192,
                     help='output patch size')
 parser.add_argument('--rgb_range', type=int, default=255,
                     help='maximum value of RGB')
-parser.add_argument('--n_colors', type=int, default=3,
+parser.add_argument('--n_colors', type=int, default=1,
                     help='number of color channels to use')
 parser.add_argument('--chop', action='store_true',
                     help='enable memory-efficient forward')

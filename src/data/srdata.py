@@ -86,7 +86,7 @@ class SRData(data.Dataset):
         self.dir_hr = os.path.join(self.apath, 'HR')
         self.dir_lr = os.path.join(self.apath, 'LR_bicubic')
         if self.input_large: self.dir_lr += 'L'
-        self.ext = ('.png', '.png')
+        self.ext = ('.tiff', '.tiff')
 
     def _check_and_load(self, ext, img, f, verbose=True):
         if not os.path.isfile(f) or ext.find('reset') >= 0:
