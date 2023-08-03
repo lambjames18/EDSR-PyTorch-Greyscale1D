@@ -43,6 +43,8 @@ parser.add_argument('--chop', action='store_true',
                     help='enable memory-efficient forward')
 parser.add_argument('--no_augment', action='store_true',
                     help='do not use data augmentation')
+parser.add_argument('--n_axis', type=int, default=1,
+                    help='number of axis to upsample (1 or 2)')
 
 # Model specifications
 parser.add_argument('--model', default='EDSR',

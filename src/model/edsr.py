@@ -19,6 +19,7 @@ class EDSR(nn.Module):
         super(EDSR, self).__init__()
 
         n_resblocks = args.n_resblocks
+        n_axis = args.n_axis
         n_feats = args.n_feats
         kernel_size = 3 
         scale = args.scale[0]
@@ -43,10 +44,16 @@ class EDSR(nn.Module):
         m_body.append(conv(n_feats, n_feats, kernel_size))
 
         # define tail module
-        m_tail = [
-            common.Upsampler(conv, scale, n_feats, act=False),
-            conv(n_feats, args.n_colors, kernel_size)
-        ]
+        if args.n_axis == 1:
+            m_tail = [
+                common.Upsampler1D(conv, scale, n_feats, act=False),
+                conv(n_feats, args.n_colors, kernel_size)
+            ]
+        else:
+            m_tail = [
+                common.Upsampler2D(conv, scale, n_feats, act=False),
+                conv(n_feats, args.n_colors, kernel_size)
+            ]
 
         self.head = nn.Sequential(*m_head)
         self.body = nn.Sequential(*m_body)
