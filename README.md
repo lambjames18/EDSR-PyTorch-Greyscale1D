@@ -5,10 +5,13 @@ Attempting to do two things with this fork:
 
 CONDA ENV: `conda create -n edsr python pytorch numpy scikit-image imageio matplotlib tqdm opencv`
 
-- Looks like the folder with images needs two subfolders: HR and LR_bicubic, these delineate the ground truth and experimental data for training
-- src/data/srdata.py line 89 specifies "png" as the extension. We likely need to change this to "tif". Not sure what the downstream affects are of this chage though.
-- Need to look for any specification of channels so that we enforce greyscale.
+### STATUS
 
+- Greyscale functionality now works. Tiff/Tif images are read in for testing and a tif image is saved for the SR output. See the only uncommented line in `demo.sh`
+- 1D also works now. This is controlled by `--n_axis` flag when calling `main.py` (again, see demo.sh). If normal 2D SR is desired, one would use `--n_axis 2` as opposed to `--n_axis 1`. 
+
+- Next step is to try training the model. The demo.sh initializes the model without any pretrained weights (pretrained weights are for RGB images so it doesn't work properly if they are used). So the demo just outputs an image with a bunch of grey pixels (I believe the exact pixel value is the mean of the image).
+- Not sure how to run training yet. Need to figure out the foler structure and the naming convention of the current training pipeline, or else we just create a new trining pipeline ourselves.
 
 # EDSR-PyTorch (Below is from the original repository)
 
