@@ -64,6 +64,3 @@ target/
 *.txt
 *.swp
 .vscode
-
-# Datasets
-test/
