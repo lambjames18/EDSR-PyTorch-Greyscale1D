@@ -18,7 +18,11 @@ class GreyScale(data.Dataset):
         self.benchmark = benchmark
 
         self.filelist = []
+        print("args:", args)
+        print("Directory path:", args.dir_demo)
+        # get this to run on the tiff folders provided
         for f in os.listdir(args.dir_demo):
+            # print(f)
             if f.find('.tiff') >= 0:
                 self.filelist.append(os.path.join(args.dir_demo, f))
         self.filelist.sort()

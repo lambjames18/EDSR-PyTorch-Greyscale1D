@@ -12,6 +12,8 @@ checkpoint = utility.checkpoint(args)
 
 def main():
     global model
+    # this tests if the code is to be run on a video
+    # not needed
     if args.data_test == ['video']:
         from videotester import VideoTester
         model = model.Model(args, checkpoint)
@@ -23,11 +25,12 @@ def main():
             _model = model.Model(args, checkpoint)
             _loss = loss.Loss(args, checkpoint) if not args.test_only else None
             t = Trainer(args, loader, _model, _loss, checkpoint)
-            while not t.terminate():
-                t.train()
-                t.test()
+            # commented out for testing
+            #while not t.terminate():
+            #    t.train()
+            #    t.test()
 
-            checkpoint.done()
+            #checkpoint.done()
 
 if __name__ == '__main__':
     main()

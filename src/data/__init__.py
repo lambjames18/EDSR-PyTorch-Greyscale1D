@@ -16,6 +16,7 @@ class MyConcatDataset(ConcatDataset):
 class Data:
     def __init__(self, args):
         self.loader_train = None
+        # for if we want to train data
         if not args.test_only:
             datasets = []
             for d in args.data_train:
@@ -31,11 +32,13 @@ class Data:
                 num_workers=args.n_threads,
             )
 
+        # for when we load our own test
         self.loader_test = []
         for d in args.data_test:
             if d in ['Set5', 'Set14', 'B100', 'Urban100']:
                 m = import_module('data.benchmark')
                 testset = getattr(m, 'Benchmark')(args, train=False, name=d)
+            # entering here 
             else:
                 module_name = d if d.find('DIV2K-Q') < 0 else 'DIV2KJPEG'
                 m = import_module('data.' + module_name.lower())
