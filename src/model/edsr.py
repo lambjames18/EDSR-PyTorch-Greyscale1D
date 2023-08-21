@@ -44,7 +44,7 @@ class EDSR(nn.Module):
         m_body.append(conv(n_feats, n_feats, kernel_size))
 
         # define tail module
-        if args.n_axis == 1:
+        if n_axis == 1:
             m_tail = [
                 common.Upsampler1D(conv, scale, n_feats, act=False),
                 conv(n_feats, args.n_colors, kernel_size)

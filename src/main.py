@@ -12,22 +12,16 @@ checkpoint = utility.checkpoint(args)
 
 def main():
     global model
-    if args.data_test == ['video']:
-        from videotester import VideoTester
-        model = model.Model(args, checkpoint)
-        t = VideoTester(args, model, checkpoint)
-        t.test()
-    else:
-        if checkpoint.ok:
-            loader = data.Data(args)
-            _model = model.Model(args, checkpoint)
-            _loss = loss.Loss(args, checkpoint) if not args.test_only else None
-            t = Trainer(args, loader, _model, _loss, checkpoint)
-            while not t.terminate():
-                t.train()
-                t.test()
+    if checkpoint.ok:
+        loader = data.Data(args)  # loader needs to have two attributes: loader_train and loader_test
+        _model = model.Model(args, checkpoint)
+        _loss = loss.Loss(args, checkpoint) if not args.test_only else None
+        t = Trainer(args, loader, _model, _loss, checkpoint)
+        while not t.terminate():
+            t.train()
+            t.test()
 
-            checkpoint.done()
+        checkpoint.done()
 
 if __name__ == '__main__':
     main()

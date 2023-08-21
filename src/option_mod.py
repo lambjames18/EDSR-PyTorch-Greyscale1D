@@ -143,14 +143,16 @@ parser.add_argument('--save_results', action='store_true',
 parser.add_argument('--save_gt', action='store_true',
                     help='save low-resolution and high-resolution images together')
 
-args = parser.parse_args()
+# args = parser.parse_args()
 
-if args.epochs == 0:
-    args.epochs = 1e8
+def format_args(args):
+    if args.epochs == 0:
+        args.epochs = 1e8
 
-for arg in vars(args):
-    if vars(args)[arg] == 'True':
-        vars(args)[arg] = True
-    elif vars(args)[arg] == 'False':
-        vars(args)[arg] = False
+    for arg in vars(args):
+        if vars(args)[arg] == 'True':
+            vars(args)[arg] = True
+        elif vars(args)[arg] == 'False':
+            vars(args)[arg] = False
+    return args
 

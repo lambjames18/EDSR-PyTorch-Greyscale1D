@@ -13,7 +13,6 @@ class Model(nn.Module):
 
         self.scale = args.scale
         self.idx_scale = 0
-        self.input_large = (args.model == 'VDSR')
         self.self_ensemble = args.self_ensemble
         self.chop = args.chop
         self.precision = args.precision
@@ -114,7 +113,7 @@ class Model(nn.Module):
             self.model.load_state_dict(load_from, strict=False)
 
     def forward_chop(self, *args, shave=10, min_size=160000):
-        scale = 1 if self.input_large else self.scale[self.idx_scale]
+        scale = self.scale[self.idx_scale]
         n_GPUs = min(self.n_GPUs, 4)
         # height, width
         h, w = args[0].size()[-2:]
