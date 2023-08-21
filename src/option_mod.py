@@ -67,20 +67,6 @@ parser.add_argument('--precision', type=str, default='single',
                     choices=('single', 'half'),
                     help='FP precision for test (single | half)')
 
-# Option for Residual dense network (RDN)
-parser.add_argument('--G0', type=int, default=64,
-                    help='default number of filters. (Use in RDN)')
-parser.add_argument('--RDNkSize', type=int, default=3,
-                    help='default kernel size. (Use in RDN)')
-parser.add_argument('--RDNconfig', type=str, default='B',
-                    help='parameters config of RDN. (Use in RDN)')
-
-# Option for Residual channel attention network (RCAN)
-parser.add_argument('--n_resgroups', type=int, default=10,
-                    help='number of residual groups')
-parser.add_argument('--reduction', type=int, default=16,
-                    help='number of feature maps reduction')
-
 # Training specifications
 parser.add_argument('--reset', action='store_true',
                     help='reset the training')
@@ -96,8 +82,6 @@ parser.add_argument('--self_ensemble', action='store_true',
                     help='use self-ensemble method for test')
 parser.add_argument('--test_only', action='store_true',
                     help='set this option to test the model')
-parser.add_argument('--gan_k', type=int, default=1,
-                    help='k value for adversarial loss')
 
 # Optimization specifications
 parser.add_argument('--lr', type=float, default=1e-4,
