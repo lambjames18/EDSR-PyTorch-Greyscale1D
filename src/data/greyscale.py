@@ -8,6 +8,7 @@ import imageio
 import torch
 import torch.utils.data as data
 
+
 class GreyScale(data.Dataset):
     def __init__(self, args, name='GreyScale', train=False, benchmark=False):
         self.args = args
@@ -18,14 +19,19 @@ class GreyScale(data.Dataset):
         self.benchmark = benchmark
 
         self.filelist = []
-        print("args:", args)
-        print("Directory path:", args.dir_demo)
-        # get this to run on the tiff folders provided
-        for f in os.listdir(args.dir_demo):
-            # print(f)
+        
+        # fix this
+        #for f in os.listdir(args.dir_demo):
+
+        # goes through all of the tiff files in the HR folder
+        new_path = os.path.join(args.dir_demo, 'HR')
+        for f in os.listdir(new_path):
             if f.find('.tiff') >= 0:
-                self.filelist.append(os.path.join(args.dir_demo, f))
+                self.filelist.append(os.path.join(new_path, f))
         self.filelist.sort()
+        # starting with fewer to see if it runs
+        self.filelist = self.filelist[:1]
+        print(self.filelist)
 
     def __getitem__(self, idx):
         filename = os.path.splitext(os.path.basename(self.filelist[idx]))[0]

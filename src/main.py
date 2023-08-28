@@ -21,16 +21,16 @@ def main():
         t.test()
     else:
         if checkpoint.ok:
+            # creates list of test and train data
             loader = data.Data(args)
             _model = model.Model(args, checkpoint)
             _loss = loss.Loss(args, checkpoint) if not args.test_only else None
             t = Trainer(args, loader, _model, _loss, checkpoint)
-            commented out for testing
             while not t.terminate():
                 t.train()
                 t.test()
 
-            #checkpoint.done()
+            checkpoint.done()
 
 if __name__ == '__main__':
     main()

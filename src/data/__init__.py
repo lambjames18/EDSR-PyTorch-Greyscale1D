@@ -17,6 +17,17 @@ class Data:
     def __init__(self, args):
         self.loader_train = None
         # for if we want to train data
+        '''# testing
+        datasets = []
+        for d in args.data_train:
+            module_name = d if d.find('DIV2K-Q') < 0 else 'DIV2KJPEG'
+            m = import_module('data.' + module_name.lower())
+            datasets.append(getattr(m, module_name)(args, name=d))
+    
+        # Print the names of the datasets
+        for dataset_instance in datasets:
+            print(f"Dataset name: {dataset_instance.name}")'''
+
         if not args.test_only:
             datasets = []
             for d in args.data_train:
@@ -41,6 +52,7 @@ class Data:
             # entering here 
             else:
                 module_name = d if d.find('DIV2K-Q') < 0 else 'DIV2KJPEG'
+                print("M in test: ", module_name)
                 m = import_module('data.' + module_name.lower())
                 testset = getattr(m, module_name)(args, train=False, name=d)
 
@@ -53,3 +65,6 @@ class Data:
                     num_workers=args.n_threads,
                 )
             )
+            # Print the name of each test dataset
+            for loader, d in zip(self.loader_test, args.data_test):
+                print(f"Testset name: {d}")

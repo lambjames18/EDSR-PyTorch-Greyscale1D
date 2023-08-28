@@ -22,12 +22,25 @@ class SRData(data.Dataset):
         self.scale = args.scale
         self.idx_scale = 0
         
+    
         self._set_filesystem(args.dir_data)
+
+        # testing
+        # print("List of files in hr ", os.listdir(self.dir_hr))
+        
         if args.ext.find('img') < 0:
             path_bin = os.path.join(self.apath, 'bin')
             os.makedirs(path_bin, exist_ok=True)
+        
 
         list_hr, list_lr = self._scan()
+
+        # these are empty
+        print("Training or testing: ", self.split)
+        print("HR: ", list_hr)
+        print()
+        print(" LR: ", list_lr)
+        print("Round finished. ")
         if args.ext.find('img') >= 0 or benchmark:
             self.images_hr, self.images_lr = list_hr, list_lr
         elif args.ext.find('sep') >= 0:
@@ -64,11 +77,12 @@ class SRData(data.Dataset):
             else:
                 self.repeat = max(n_patches // n_images, 1)
 
-    # Below functions as used to prepare images
     def _scan(self):
         names_hr = sorted(
             glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))
         )
+        # testing
+
         names_lr = [[] for _ in self.scale]
         for f in names_hr:
             filename, _ = os.path.splitext(os.path.basename(f))
@@ -78,13 +92,15 @@ class SRData(data.Dataset):
                         s, filename, s, self.ext[1]
                     )
                 ))
-
+        
+        #return names_hr[:1], [lr_list[:1] for lr_list in names_lr]
         return names_hr, names_lr
 
     def _set_filesystem(self, dir_data):
         self.apath = os.path.join(dir_data, self.name)
         self.dir_hr = os.path.join(self.apath, 'HR')
-        self.dir_lr = os.path.join(self.apath, 'LR_bicubic')
+        # changed from LR_bicubic
+        self.dir_lr = os.path.join(self.apath, 'LR')
         if self.input_large: self.dir_lr += 'L'
         self.ext = ('.tiff', '.tiff')
 

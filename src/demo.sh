@@ -21,7 +21,9 @@
 # Test your own images
 # python main.py --data_test Demo --scale 4 --pre_train download --test_only --save_results --n_colors 1
 # python main.py --data_test GreyScale --scale 4 --pre_train download --test_only --save_results --n_colors 1
-python main.py --data_test GreyScale --scale 4 --test_only --save_results --n_colors 1 --n_axis 1
+# python main.py --data_test GreyScale --scale 4 --test_only --save_results --n_colors 1 --n_axis 1
+# python main.py --data_test pollockData --scale 4 --test_only --save_results --n_colors 1 --n_axis 1
+python main.py --data_test pollockData --scale 4 --save_results --n_colors 1 --n_axis 1
 
 # Advanced - Training with adversarial loss
 #python main.py --template GAN --scale 4 --save edsr_gan --reset --patch_size 96 --loss 5*VGG54+0.15*GAN --pre_train download
