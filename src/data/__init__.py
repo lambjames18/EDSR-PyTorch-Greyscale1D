@@ -23,6 +23,7 @@ class Data:
                 m = import_module('data.' + module_name.lower())
                 datasets.append(getattr(m, module_name)(args, name=module_name))'''
             module_name = args.data_train
+            print(module_name)
             m = import_module('data.' + module_name.lower())
             datasets.append(getattr(m, module_name)(args, name=module_name))
 
@@ -36,22 +37,6 @@ class Data:
 
         # for when we load our own test
         self.loader_test = []
-        '''for module_name in args.data_test:
-            m = import_module('data.' + module_name.lower())
-            testset = getattr(m, module_name)(args, train=False, name=module_name)
-
-            self.loader_test.append(
-                dataloader.DataLoader(
-                    testset,
-                    batch_size=1,
-                    shuffle=False,
-                    pin_memory=not args.cpu,
-                    num_workers=args.n_threads,
-                )
-            )
-            # Print the name of each test dataset
-            for loader, d in zip(self.loader_test, args.data_test):
-                print(f"Testset name: {d}")'''
         
         module_name = args.data_test
         m = import_module('data.' + module_name.lower())
@@ -66,6 +51,3 @@ class Data:
                 num_workers=args.n_threads,
             )
         )
-        # Print the name of each test dataset
-        for loader, d in zip(self.loader_test, args.data_test):
-            print(f"Testset name: {d}")

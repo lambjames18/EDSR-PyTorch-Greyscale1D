@@ -8,8 +8,9 @@ import option_mod
 from trainer import Trainer
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
-args = option_mod.parser.parse_args(["--data_test", "GreyScale", "--scale", "4", "--test_only", "--save_results", "--n_colors", "1", "--n_axis", "1"])
+args = option_mod.parser.parse_args(["--data_test", "pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1"])
 args = option_mod.format_args(args)
+# --data_test pollockData --scale 4 --save_results --n_colors 1 --n_axis 1
 
 # Just setting the seed for random variables
 torch.manual_seed(args.seed)
@@ -23,6 +24,8 @@ if not checkpoint.ok:
 
 # This is a class that loads the data
 loader = data.Data(args)  # loader needs to have two attributes: loader_train and loader_test
+print("Test: ", loader.loader_test)
+print("Train: ", loader.loader_train)
 # This is a class that loads the model
 _model = model.Model(args, checkpoint)
 # This is a class that loads the loss function
@@ -32,12 +35,31 @@ else:
     _loss = loss.Loss(args, checkpoint)
 
 # Lets just run the model once to get a loss value
-exit()
 # Now we can train and test the model
 # t = Trainer(args, loader, _model, _loss, checkpoint)
-# while not t.terminate():
-#     t.train()
-#     t.test()
-#
-# checkpoint.done()
+
+class Train:
+    def __init__(self, args, loader, my_model, my_loss, ckp):
+        self.args = args
+        self.scale = args.scale
+
+        self.ckp = ckp
+        self.loader_train = loader.loader_train
+        self.loader_test = loader.loader_test
+        self.model = my_model
+        self.loss = my_loss
+        self.optimizer = utility.make_optimizer(args, self.model)
+        if self.args.load != '':
+            self.optimizer.load(ckp.dir, epoch=len(ckp.log))
+
+        self.error_last = 1e8
+
+
+exit()
+
+while not t.terminate():
+    # beginning with training
+    t.train
+
+checkpoint.done()
 

@@ -17,13 +17,13 @@ parser.add_argument('--seed', type=int, default=1,
 
 # Data specifications
 # Changed this to the path of the training dataset
-parser.add_argument('--dir_data', type=str, default='/Users/anayakhan/Desktop/Pollock/DIV2K',
+parser.add_argument('--dir_data', type=str, default='../../dataset',
                     help='dataset directory')
 parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
-parser.add_argument('--data_train', type=str, default='DIV2K',
+parser.add_argument('--data_train', type=str, default='pollockData',
                     help='train dataset name')
-parser.add_argument('--data_test', type=str, default='GreyScale',
+parser.add_argument('--data_test', type=str, default='pollockData',
                     help='test dataset name')
 parser.add_argument('--data_range', type=str, default='1-800/801-810',
                     help='train/test data range')

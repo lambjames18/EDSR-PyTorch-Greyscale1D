@@ -34,13 +34,11 @@ class SRData(data.Dataset):
         
 
         list_hr, list_lr = self._scan()
-
-        # these are empty
-        print("Training or testing: ", self.split)
+        print(self.split)
+        print("LR: ", list_lr)
         print("HR: ", list_hr)
-        print()
-        print(" LR: ", list_lr)
-        print("Round finished. ")
+
+        
         if args.ext.find('img') >= 0 or benchmark:
             self.images_hr, self.images_lr = list_hr, list_lr
         elif args.ext.find('sep') >= 0:
@@ -112,11 +110,15 @@ class SRData(data.Dataset):
                 pickle.dump(imageio.imread(img), _f)
 
     def __getitem__(self, idx):
+        print("loading")
         lr, hr, filename = self._load_file(idx)
+        print("get patch")
         pair = self.get_patch(lr, hr)
+        print("channel")
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
+        print("Before ", idx)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
-
+        print("After ", idx)
         return pair_t[0], pair_t[1], filename
 
     def __len__(self):
@@ -139,7 +141,9 @@ class SRData(data.Dataset):
         filename, _ = os.path.splitext(os.path.basename(f_hr))
         if self.args.ext == 'img' or self.benchmark:
             hr = imageio.imread(f_hr)
+            hr = hr.reshape(hr.shape[0], hr.shape[1], 1)
             lr = imageio.imread(f_lr)
+            lr = lr.reshape(lr.shape[0], lr.shape[1], 1)
         elif self.args.ext.find('sep') >= 0:
             with open(f_hr, 'rb') as _f:
                 hr = pickle.load(_f)

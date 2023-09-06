@@ -30,7 +30,7 @@ parser.add_argument('--data_test', type=str, default='pollockData',
                     help='test dataset name')
 parser.add_argument('--data_range', type=str, default='1-800/801-810',
                     help='train/test data range')
-parser.add_argument('--ext', type=str, default='sep',
+parser.add_argument('--ext', type=str, default='img',
                     help='dataset file extension')
 parser.add_argument('--scale', type=str, default='3',
                     help='super resolution scale')

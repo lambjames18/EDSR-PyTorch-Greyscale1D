@@ -8,6 +8,9 @@ import torch
 def get_patch(*args, patch_size=96, scale=2, multi=False, input_large=False):
     ih, iw = args[0].shape[:2]
 
+    if type(scale) is str:
+        scale = int(scale)
+
     if not input_large:
         p = scale if multi else 1
         tp = p * patch_size
@@ -48,7 +51,7 @@ def set_channel(*args, n_channels=3):
 
 def np2Tensor(*args, rgb_range=255):
     def _np2Tensor(img):
-        np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))
+        np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1))).copy()
         tensor = torch.from_numpy(np_transpose).float()
         tensor.mul_(rgb_range / 255)
 
