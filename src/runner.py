@@ -5,7 +5,12 @@ import data
 import model
 import loss
 import option_mod
-from trainer import Trainer
+
+# for testing the Train
+from decimal import Decimal
+import torch.nn.utils as utils
+
+# from trainer import Trainer
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
 args = option_mod.parser.parse_args(["--data_test", "pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1"])
@@ -38,7 +43,7 @@ else:
 # Now we can train and test the model
 # t = Trainer(args, loader, _model, _loss, checkpoint)
 
-class Train:
+'''class Train:
     def __init__(self, args, loader, my_model, my_loss, ckp):
         self.args = args
         self.scale = args.scale
@@ -53,13 +58,108 @@ class Train:
             self.optimizer.load(ckp.dir, epoch=len(ckp.log))
 
         self.error_last = 1e8
+    
+    def train(self): # goal: plot the loss function
+        # update learning rate at the beginning of new epoch
+        self.loss.step()
+        # logs current epoch number and learning rate from optimizer
+        epoch = self.optimizer.get_last_epoch() + 1
+        lr = self.optimizer.get_lr()
+
+        # Printing learning rate
+        self.ckp.write_log(
+            '[Epoch {}]\tLearning rate: {:.2e}'.format(epoch, Decimal(lr))
+        )
+        # initialization of loss log
+        self.loss.start_log()
+        print("Loss Log started")
+        # set model to train where there is possibility of test
+        self.model.train()
+        print("Model to train reached")
+
+        # times the process
+        timer_data, timer_model = utility.timer(), utility.timer()
+        print("Timer set")
+        # TEMP
+        self.loader_train.dataset.set_scale(0)
+        print("loader_train rescaled to 0")
+        count = 0
+        for batch, (lr, hr, _,) in enumerate(self.loader_train):
+            # to keep track of it running
+            print("Loop number: ", count)
+            
+            # use of prepare function 
+            lr, hr = self.prepare(lr, hr)
+            print("LR: ", lr)
+            print("HR: ", hr)
+            print()
+
+            timer_data.hold()
+            timer_model.tic()
+
+            self.optimizer.zero_grad()
+            print("Optimizer zero_grad acheived")
+
+            sr = self.model(lr, 0)
+            loss = self.loss(sr, hr)
+            loss.backward()
+
+            if self.args.gclip > 0:
+                utils.clip_grad_value_(
+                    self.model.parameters(),
+                    self.args.gclip
+                )
+            self.optimizer.step()
+
+            timer_model.hold()
+
+            if (batch + 1) % self.args.print_every == 0:
+                self.ckp.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+                    (batch + 1) * self.args.batch_size,
+                    len(self.loader_train.dataset),
+                    self.loss.display_loss(batch),
+                    timer_model.release(),
+                    timer_data.release()))
+
+            timer_data.tic()
+            count += 1
+
+        self.loss.end_log(len(self.loader_train))
+        self.error_last = self.loss.log[-1, -1]
+        self.optimizer.schedule()
+    
+    def terminate(self):
+        if self.args.test_only:
+            self.test()
+            return True
+        else:
+            epoch = self.optimizer.get_last_epoch() + 1
+            return epoch >= self.args.epochs
+    
+    def prepare(self, *args):
+        if self.args.cpu:
+            device = torch.device('cpu')
+        else:
+            if torch.backends.mps.is_available():
+                device = torch.device('mps')
+            elif torch.cuda.is_available():
+                device = torch.device('cuda')
+            else:
+                device = torch.device('cpu')
+        def _prepare(tensor):
+            if self.args.precision == 'half': tensor = tensor.half()
+            return tensor.to(device)
+
+        return [_prepare(a) for a in args]
 
 
-exit()
+# _loss = my_loss
+# loss function for training
+t = Train(args, loader, _model, _loss, checkpoint)
 
 while not t.terminate():
     # beginning with training
     t.train
 
-checkpoint.done()
+checkpoint.done()'''
 
