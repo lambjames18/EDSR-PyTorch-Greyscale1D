@@ -18,14 +18,11 @@ class Data:
         self.loader_train = None
         if not args.test_only:
             datasets = []
-            '''for module_name in args.data_train:
-                print("Module name: ", module_name)
+            if type(args.data_train) is str:
+                args.data_train = [args.data_train]
+            for module_name in args.data_train:
                 m = import_module('data.' + module_name.lower())
-                datasets.append(getattr(m, module_name)(args, name=module_name))'''
-            module_name = args.data_train
-            print(module_name)
-            m = import_module('data.' + module_name.lower())
-            datasets.append(getattr(m, module_name)(args, name=module_name))
+                datasets.append(getattr(m, module_name)(args, name=module_name))
 
             self.loader_train = dataloader.DataLoader(
                 MyConcatDataset(datasets),
@@ -37,10 +34,11 @@ class Data:
 
         # for when we load our own test
         self.loader_test = []
-        
-        module_name = args.data_test
-        m = import_module('data.' + module_name.lower())
-        testset = getattr(m, module_name)(args, train=False, name=module_name)
+        if type(args.data_test) is str:
+            args.data_test = [args.data_test]
+        for module_name in args.data_test:
+            m = import_module('data.' + module_name.lower())
+            testset = getattr(m, module_name)(args, train=False, name=module_name)
 
         self.loader_test.append(
             dataloader.DataLoader(
