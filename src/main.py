@@ -17,6 +17,7 @@ def main():
         _model = model.Model(args, checkpoint)
         _loss = loss.Loss(args, checkpoint) if not args.test_only else None
         t = Trainer(args, loader, _model, _loss, checkpoint)
+        exit()
         while not t.terminate():
             t.train()
             t.test()

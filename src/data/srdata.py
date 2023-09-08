@@ -34,9 +34,6 @@ class SRData(data.Dataset):
         
 
         list_hr, list_lr = self._scan()
-        print(self.split)
-        print("LR: ", list_lr)
-        print("HR: ", list_hr)
 
         
         if args.ext.find('img') >= 0 or benchmark:
@@ -79,7 +76,6 @@ class SRData(data.Dataset):
         names_hr = sorted(
             glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))
         )
-        # testing
 
         names_lr = [[] for _ in self.scale]
         for f in names_hr:

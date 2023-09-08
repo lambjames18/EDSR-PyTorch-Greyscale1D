@@ -9,8 +9,9 @@ import option_mod
 # for testing the Train
 from decimal import Decimal
 import torch.nn.utils as utils
+import matplotlib.pyplot as plt
 
-# from trainer import Trainer
+from trainer import Trainer
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
 args = option_mod.parser.parse_args(["--data_test", "pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1"])
@@ -39,7 +40,39 @@ if args.test_only:
 else:
     _loss = loss.Loss(args, checkpoint)
 
+
+
 # Lets just run the model once to get a loss value
+# training
+loaderTrain = loader.loader_train
+
+# update learning rate at the beginning of new epoch
+_loss.step()
+
+# creating optimizer
+optimizer = utility.make_optimizer(args, _model)
+
+# logs current epoch number and learning rate from optimizer
+epoch = optimizer.get_last_epoch() + 1
+
+# getting the learning rate 
+lr = optimizer.get_lr()
+
+# initialization of loss log
+_loss.start_log()
+print("Loss Log started")
+        
+# set model to train where there is possibility of test
+_model.train()
+print("Model to train reached")
+
+# setting scale
+loaderTrain.dataset.set_scale(0)
+
+batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
+print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
+print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
+
 # Now we can train and test the model
 # t = Trainer(args, loader, _model, _loss, checkpoint)
 
@@ -88,7 +121,7 @@ else:
             # to keep track of it running
             print("Loop number: ", count)
             
-            # use of prepare function 
+            # use of prepare function  for parallel processing 
             lr, hr = self.prepare(lr, hr)
             print("LR: ", lr)
             print("HR: ", hr)
@@ -155,11 +188,11 @@ else:
 
 # _loss = my_loss
 # loss function for training
-t = Train(args, loader, _model, _loss, checkpoint)
+t = Trainer(args, loader, _model, _loss, checkpoint)
 
 while not t.terminate():
     # beginning with training
-    t.train
+    t.train()
 
 checkpoint.done()'''
 

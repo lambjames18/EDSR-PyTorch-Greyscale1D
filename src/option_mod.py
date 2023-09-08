@@ -17,7 +17,7 @@ parser.add_argument('--seed', type=int, default=1,
 
 # Data specifications
 # Changed this to the path of the training dataset
-parser.add_argument('--dir_data', type=str, default='../../dataset',
+parser.add_argument('--dir_data', type=str, default='/Users/anayakhan/Desktop/Pollock/dataset',
                     help='dataset directory')
 parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
