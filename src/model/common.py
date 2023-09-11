@@ -151,6 +151,10 @@ class Upsampler1D(nn.Module):
          
     def forward(self, x):
         x = x.permute(0,1,3,2)
+        
+        if type(self.scale) is str:
+            self.scale = int(self.scale)
+
         if (self.scale & (self.scale - 1)) == 0:    # Is scale = 2^n?
             for _ in range(int(math.log(self.scale, 2))):
                 #import pdb; pdb.set_trace()

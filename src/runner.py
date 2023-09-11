@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from trainer import Trainer
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
-args = option_mod.parser.parse_args(["--data_test", "pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1"])
+args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "3", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 args = option_mod.format_args(args)
 # --data_test pollockData --scale 4 --save_results --n_colors 1 --n_axis 1
 
@@ -41,7 +41,6 @@ else:
     _loss = loss.Loss(args, checkpoint)
 
 
-
 # Lets just run the model once to get a loss value
 # training
 loaderTrain = loader.loader_train
@@ -56,7 +55,7 @@ optimizer = utility.make_optimizer(args, _model)
 epoch = optimizer.get_last_epoch() + 1
 
 # getting the learning rate 
-lr = optimizer.get_lr()
+lr_rate = optimizer.get_lr()
 
 # initialization of loss log
 _loss.start_log()
@@ -72,6 +71,28 @@ loaderTrain.dataset.set_scale(0)
 batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
 print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
 print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
+
+# defining the device without the parallel processing in the given function
+if args.cpu:
+    device = torch.device('cpu')
+else:
+    if torch.backends.mps.is_available():
+        device = torch.device('mps')
+    elif torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+
+# processed with the determined device, in this case cpu 
+lr = lr.to(device)
+hr = hr.to(device)
+
+optimizer.zero_grad()
+print("Optimizer zero_grad acheived")
+
+sr = _model(lr, 0)
+loss = _loss(sr, hr)
+loss.backward()
 
 # Now we can train and test the model
 # t = Trainer(args, loader, _model, _loss, checkpoint)

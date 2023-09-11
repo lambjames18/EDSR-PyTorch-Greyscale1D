@@ -5,31 +5,22 @@ import skimage.color as sc
 
 import torch
 
-def get_patch(*args, patch_size=96, scale=2, multi=False, input_large=False):
+# assuming low res patch size 
+# will scale upward for high res
+def get_patch(*args, patch_size=96, scale=2):
     ih, iw = args[0].shape[:2]
 
     if type(scale) is str:
         scale = int(scale)
 
-    if not input_large:
-        p = scale if multi else 1
-        tp = p * patch_size
-        ip = tp // scale
-    else:
-        tp = patch_size
-        ip = patch_size
+    ix = random.randrange(0, iw - patch_size + 1)
+    iy = random.randrange(0, ih - patch_size + 1)
 
-    ix = random.randrange(0, iw - ip + 1)
-    iy = random.randrange(0, ih - ip + 1)
-
-    if not input_large:
-        tx, ty = scale * ix, scale * iy
-    else:
-        tx, ty = ix, iy
+    tx, ty = scale * ix, scale * iy
 
     ret = [
-        args[0][iy:iy + ip, ix:ix + ip],
-        *[a[ty:ty + tp, tx:tx + tp] for a in args[1:]]
+        args[0][iy:iy + patch_size, ix:ix + patch_size],
+        *[a[ty:ty + (patch_size * scale), tx:tx + (patch_size * scale)] for a in args[1:]]
     ]
 
     return ret

@@ -30,11 +30,10 @@ class SRData(data.Dataset):
         
         if args.ext.find('img') < 0:
             path_bin = os.path.join(self.apath, 'bin')
+            #path_bin = os.path.join(self.apath, 'bin')
             os.makedirs(path_bin, exist_ok=True)
         
-
         list_hr, list_lr = self._scan()
-
         
         if args.ext.find('img') >= 0 or benchmark:
             self.images_hr, self.images_lr = list_hr, list_lr
@@ -43,14 +42,19 @@ class SRData(data.Dataset):
                 self.dir_hr.replace(self.apath, path_bin),
                 exist_ok=True
             )
-            for s in self.scale:
+            os.makedirs(
+                self.dir_lr.replace(self.apath, path_bin),
+                exist_ok=True
+            )
+
+            '''for s in self.scale:
                 os.makedirs(
                     os.path.join(
                         self.dir_lr.replace(self.apath, path_bin),
                         'X{}'.format(s)
                     ),
                     exist_ok=True
-                )
+                )'''
             
             self.images_hr, self.images_lr = [], [[] for _ in self.scale]
             for h in list_hr:
@@ -58,12 +62,11 @@ class SRData(data.Dataset):
                 b = b.replace(self.ext[0], '.pt')
                 self.images_hr.append(b)
                 self._check_and_load(args.ext, h, b, verbose=True) 
-            for i, ll in enumerate(list_lr):
-                for l in ll:
-                    b = l.replace(self.apath, path_bin)
-                    b = b.replace(self.ext[1], '.pt')
-                    self.images_lr[i].append(b)
-                    self._check_and_load(args.ext, l, b, verbose=True) 
+            for l in list_lr:
+                b = l.replace(self.apath, path_bin)
+                b = b.replace(self.ext[1], '.pt')
+                self.images_lr.append(b)
+                self._check_and_load(args.ext, l, b, verbose=True) 
         if train:
             n_patches = args.batch_size * args.test_every
             n_images = len(args.data_train) * len(self.images_hr)
@@ -78,24 +81,19 @@ class SRData(data.Dataset):
         )
 
         names_lr = [[] for _ in self.scale]
-        for f in names_hr:
-            filename, _ = os.path.splitext(os.path.basename(f))
-            for si, s in enumerate(self.scale):
-                names_lr[si].append(os.path.join(
-                    self.dir_lr, 'X{}/{}x{}{}'.format(
-                        s, filename, s, self.ext[1]
-                    )
-                ))
+        
+        names_lr = sorted(
+            glob.glob(os.path.join(self.dir_lr, '*' + self.ext[0]))
+        )
         
         #return names_hr[:1], [lr_list[:1] for lr_list in names_lr]
         return names_hr, names_lr
 
     def _set_filesystem(self, dir_data):
-        self.apath = os.path.join(dir_data, self.name)
-        self.dir_hr = os.path.join(self.apath, 'HR')
+        self.apath = os.path.abspath(dir_data)
+        self.dir_hr = os.path.join(self.apath, self.split, 'HR')
         # changed from LR_bicubic
-        self.dir_lr = os.path.join(self.apath, 'LR')
-        if self.input_large: self.dir_lr += 'L'
+        self.dir_lr = os.path.join(self.apath, self.split, 'LR')
         self.ext = ('.tiff', '.tiff')
 
     def _check_and_load(self, ext, img, f, verbose=True):
@@ -106,15 +104,11 @@ class SRData(data.Dataset):
                 pickle.dump(imageio.imread(img), _f)
 
     def __getitem__(self, idx):
-        print("loading")
         lr, hr, filename = self._load_file(idx)
-        print("get patch")
         pair = self.get_patch(lr, hr)
-        print("channel")
+        print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
-        print("Before ", idx)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
-        print("After ", idx)
         return pair_t[0], pair_t[1], filename
 
     def __len__(self):
@@ -132,7 +126,8 @@ class SRData(data.Dataset):
     def _load_file(self, idx):
         idx = self._get_index(idx)
         f_hr = self.images_hr[idx]
-        f_lr = self.images_lr[self.idx_scale][idx]
+        # f_lr = self.images_lr[self.idx_scale][idx]
+        f_lr = self.images_lr[idx]
 
         filename, _ = os.path.splitext(os.path.basename(f_hr))
         if self.args.ext == 'img' or self.benchmark:
@@ -154,9 +149,7 @@ class SRData(data.Dataset):
             lr, hr = common.get_patch(
                 lr, hr,
                 patch_size=self.args.patch_size,
-                scale=scale,
-                multi=(len(self.scale) > 1),
-                input_large=self.input_large
+                scale=scale
             )
             if not self.args.no_augment: lr, hr = common.augment(lr, hr)
         else:

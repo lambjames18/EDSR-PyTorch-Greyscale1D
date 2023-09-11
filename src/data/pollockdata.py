@@ -29,7 +29,7 @@ class pollockData(srdata.SRData):
 
     def _set_filesystem(self, dir_data):
         super(pollockData, self)._set_filesystem(dir_data)
-        self.dir_hr = os.path.join(self.apath, 'pollockData_train_HR')
-        self.dir_lr = os.path.join(self.apath, 'pollockData_train_LR')
-        if self.input_large: self.dir_lr += 'L'
+        #self.dir_hr = os.path.join(self.apath, 'pollockData_train_HR')
+        #self.dir_lr = os.path.join(self.apath, 'pollockData_train_LR')
+        #if self.input_large: self.dir_lr += 'L'
 
