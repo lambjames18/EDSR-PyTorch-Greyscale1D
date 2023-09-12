@@ -153,7 +153,8 @@ class SRData(data.Dataset):
                 patch_size=self.args.patch_size,
                 scale=scale
             )
-            if not self.args.no_augment: lr, hr = common.augment(lr, hr)
+            #if not self.args.no_augment: 
+            #    lr, hr = common.augment(lr, hr)
         else:
             ih, iw = lr.shape[:2]
             hr = hr[0:ih * scale, 0:iw * scale]

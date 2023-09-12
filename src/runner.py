@@ -65,6 +65,9 @@ print("Loss Log started")
 _model.train()
 print("Model to train reached")
 
+timer_data, timer_model = utility.timer(), utility.timer()
+print("Timer set")
+
 # setting scale
 loaderTrain.dataset.set_scale(0)
 
@@ -87,13 +90,25 @@ else:
 lr = lr.to(device)
 hr = hr.to(device)
 
+timer_data.hold()
+timer_model.tic()
+
 optimizer.zero_grad()
 print("Optimizer zero_grad acheived")
 
 # forward pass with low res input and scale factor of zero
 sr = _model(lr, 0)
 loss = _loss(sr, hr)
-#loss.backward()
+loss.backward()
+
+if args.gclip > 0:
+    utils.clip_grad_value_(
+        _model.parameters(),
+        args.gclip
+        )
+    optimizer.step()
+
+    timer_model.hold()
 
 # Now we can train and test the model
 # t = Trainer(args, loader, _model, _loss, checkpoint)

@@ -10,19 +10,23 @@ import torch
 def get_patch(*args, patch_size=96, scale=2):
     ih, iw = args[0].shape[:2]
 
+    # for testing 
+    ih2, iw2 = args[1].shape[:2]
+
     if type(scale) is str:
         scale = int(scale)
 
     iy = random.randrange(0, ih - patch_size + 1)
     ty = iy * scale 
 
-    ix = random.randrange(0, iw - patch_size + 1)
+    ix = random.randrange(0, iw - (patch_size * scale) + 1)
 
     ret = [
         args[0][iy:iy + patch_size, ix:ix + (patch_size * scale)],
         *[a[ty:ty + (patch_size * scale), ix:ix + (patch_size * scale)] for a in args[1:]]
     ]
 
+    print("Size lr: ", ret[0].shape, "Size hr: ", ret[1].shape)
     return ret
 
 
