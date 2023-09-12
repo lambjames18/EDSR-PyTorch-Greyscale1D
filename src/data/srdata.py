@@ -58,15 +58,17 @@ class SRData(data.Dataset):
             
             self.images_hr, self.images_lr = [], [[] for _ in self.scale]
             for h in list_hr:
-                b = h.replace(self.apath, path_bin)
-                b = b.replace(self.ext[0], '.pt')
-                self.images_hr.append(b)
-                self._check_and_load(args.ext, h, b, verbose=True) 
+                if(h != ''):
+                    b = h.replace(self.apath, path_bin)
+                    b = b.replace(self.ext[0], '.pt')
+                    self.images_hr.append(b)
+                    self._check_and_load(args.ext, h, b, verbose=True)
             for l in list_lr:
-                b = l.replace(self.apath, path_bin)
-                b = b.replace(self.ext[1], '.pt')
-                self.images_lr.append(b)
-                self._check_and_load(args.ext, l, b, verbose=True) 
+                if(l != ''):
+                    b = l.replace(self.apath, path_bin)
+                    b = b.replace(self.ext[1], '.pt')
+                    self.images_lr.append(b)
+                    self._check_and_load(args.ext, l, b, verbose=True) 
         if train:
             n_patches = args.batch_size * args.test_every
             n_images = len(args.data_train) * len(self.images_hr)
@@ -80,10 +82,10 @@ class SRData(data.Dataset):
             glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))
         )
 
-        names_lr = [[] for _ in self.scale]
+        #names_lr = [[] for _ in self.scale]
         
         names_lr = sorted(
-            glob.glob(os.path.join(self.dir_lr, '*' + self.ext[0]))
+            glob.glob(os.path.join(self.dir_lr, '*' + self.ext[1]))
         )
         
         #return names_hr[:1], [lr_list[:1] for lr_list in names_lr]

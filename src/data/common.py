@@ -13,17 +13,31 @@ def get_patch(*args, patch_size=96, scale=2):
     if type(scale) is str:
         scale = int(scale)
 
+    iy = random.randrange(0, ih - patch_size + 1)
+    ty = iy * scale 
+
     ix = random.randrange(0, iw - patch_size + 1)
+
+    ret = [
+        args[0][iy:iy + patch_size, ix:ix + (patch_size * scale)],
+        *[a[ty:ty + (patch_size * scale), ix:ix + (patch_size * scale)] for a in args[1:]]
+    ]
+
+    return ret
+
+
+    '''ix = random.randrange(0, iw - patch_size + 1)
     iy = random.randrange(0, ih - patch_size + 1)
 
     tx, ty = scale * ix, scale * iy
 
+    # for 2D
     ret = [
         args[0][iy:iy + patch_size, ix:ix + patch_size],
         *[a[ty:ty + (patch_size * scale), tx:tx + (patch_size * scale)] for a in args[1:]]
-    ]
+    ]'''
 
-    return ret
+   
 
 def set_channel(*args, n_channels=3):
     def _set_channel(img):
