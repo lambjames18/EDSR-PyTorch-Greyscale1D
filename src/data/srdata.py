@@ -25,15 +25,15 @@ class SRData(data.Dataset):
     
         self._set_filesystem(args.dir_data)
 
-        # testing
-        # print("List of files in hr ", os.listdir(self.dir_hr))
-        
         if args.ext.find('img') < 0:
             path_bin = os.path.join(self.apath, 'bin')
             #path_bin = os.path.join(self.apath, 'bin')
             os.makedirs(path_bin, exist_ok=True)
         
         list_hr, list_lr = self._scan()
+        print("Type: ", self.split)
+        print("HR: ", list_hr)
+        print("LR: ", list_lr)
         
         if args.ext.find('img') >= 0 or benchmark:
             self.images_hr, self.images_lr = list_hr, list_lr
@@ -92,6 +92,8 @@ class SRData(data.Dataset):
         return names_hr, names_lr
 
     def _set_filesystem(self, dir_data):
+        if(self.split == 'test'):
+            print("Testing set filesystem")
         self.apath = os.path.abspath(dir_data)
         self.dir_hr = os.path.join(self.apath, self.split, 'HR')
         # changed from LR_bicubic
