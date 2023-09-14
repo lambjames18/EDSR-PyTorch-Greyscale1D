@@ -22,8 +22,11 @@ class pollockData(srdata.SRData):
 
     def _scan(self):
         names_hr, names_lr = super(pollockData, self)._scan()
-        names_hr = names_hr[self.begin - 1:self.end]
-        names_lr = [n[self.begin - 1:self.end] for n in names_lr]
+        # this is where the test gets deleted
+        # this slices the data based off of the set data range
+        # may be useful for when the data is loaded differently
+        #names_hr = names_hr[self.begin - 1:self.end]
+        #names_lr = [n[self.begin - 1:self.end] for n in names_lr]
 
         return names_hr, names_lr
 

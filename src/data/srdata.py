@@ -92,8 +92,6 @@ class SRData(data.Dataset):
         return names_hr, names_lr
 
     def _set_filesystem(self, dir_data):
-        if(self.split == 'test'):
-            print("Testing set filesystem")
         self.apath = os.path.abspath(dir_data)
         self.dir_hr = os.path.join(self.apath, self.split, 'HR')
         # changed from LR_bicubic
