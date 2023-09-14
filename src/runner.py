@@ -1,3 +1,4 @@
+
 import torch
 
 import utility
@@ -14,9 +15,12 @@ import matplotlib.pyplot as plt
 from trainer import Trainer
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
-args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
+# args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
+args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
-# --data_test pollockData --scale 4 --save_results --n_colors 1 --n_axis 1
+if not args.cpu and torch.cuda.is_available():
+    USE_GPU = True
+    torch.cuda.empty_cache()
 
 # Just setting the seed for random variables
 torch.manual_seed(args.seed)
@@ -79,6 +83,7 @@ print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
 if args.cpu:
     device = torch.device('cpu')
 else:
+    print("CUDA Available: ", torch.cuda.is_available())
     if torch.backends.mps.is_available():
         device = torch.device('mps')
     elif torch.cuda.is_available():
