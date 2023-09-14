@@ -31,9 +31,6 @@ class SRData(data.Dataset):
             os.makedirs(path_bin, exist_ok=True)
         
         list_hr, list_lr = self._scan()
-        print("Type: ", self.split)
-        print("HR: ", list_hr)
-        print("LR: ", list_lr)
         
         if args.ext.find('img') >= 0 or benchmark:
             self.images_hr, self.images_lr = list_hr, list_lr
