@@ -26,7 +26,6 @@ def get_patch(*args, patch_size=96, scale=2):
         *[a[ty:ty + (patch_size * scale), ix:ix + (patch_size * scale)] for a in args[1:]]
     ]
 
-    print("Size lr: ", ret[0].shape, "Size hr: ", ret[1].shape)
     return ret
 
 
