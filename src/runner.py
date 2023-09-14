@@ -74,63 +74,65 @@ print("Timer set")
 
 # setting scale
 loaderTrain.dataset.set_scale(0)
+count = 0
 
-batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
-print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
+# batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
+for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
+    print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
+    print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
 
-# defining the device without the parallel processing in the given function
-if args.cpu:
-    device = torch.device('cpu')
-else:
-    print("CUDA Available: ", torch.cuda.is_available())
-    if torch.backends.mps.is_available():
-        device = torch.device('mps')
-    elif torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
+    # defining the device without the parallel processing in the given function
+    if args.cpu:
         device = torch.device('cpu')
+    else:
+        print("CUDA Available: ", torch.cuda.is_available())
+        if torch.backends.mps.is_available():
+            device = torch.device('mps')
+        elif torch.cuda.is_available():
+            device = torch.device('cuda')
+        else:
+            device = torch.device('cpu')
 
 
-# processed with the determined device, in this case cpu 
-lr = lr.to(device)
-hr = hr.to(device)
+    # processed with the determined device, in this case cpu 
+    lr = lr.to(device)
+    hr = hr.to(device)
 
-timer_data.hold()
-timer_model.tic()
+    timer_data.hold()
+    timer_model.tic()
 
-optimizer.zero_grad()
-print("Optimizer zero_grad acheived")
+    optimizer.zero_grad()
+    print("Optimizer zero_grad acheived")
 
-# forward pass with low res input and scale factor of zero
-sr = _model(lr, 0)
-loss = _loss(sr, hr)
-loss.backward()
+    # forward pass with low res input and scale factor of zero
+    sr = _model(lr, 0)
+    loss = _loss(sr, hr)
+    loss.backward()
  
-'''if args.gclip > 0:
-    utils.clip_grad_value_(
-        _model.parameters(),
-        args.gclip
-        )'''
-optimizer.step()
-timer_model.hold()
+    '''if args.gclip > 0:
+        utils.clip_grad_value_(
+            _model.parameters(),
+            args.gclip
+            )'''
+    optimizer.step()
+    timer_model.hold()
 
-# logging the training status
-checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
-(batch_idx + 1) * args.batch_size,
-len(loaderTrain.dataset),
-_loss.display_loss(batch_idx),
-timer_model.release(),
-timer_data.release()))
+    # logging every training status currently
+    checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+    (batch_idx + 1) * args.batch_size,
+    len(loaderTrain.dataset),
+    _loss.display_loss(batch_idx),
+    timer_model.release(),
+    timer_data.release()))
 
-print("Train status logged")
+    print("Train status ", count, " logged")
 
-timer_data.tic()
+    timer_data.tic()
+    count+=1
 
 _loss.end_log(len(loaderTrain))
 error_last = _loss.log[-1, -1]
 optimizer.schedule()
-print("Made to the end of the first train")
 
 
 # Now we can train and test the model
