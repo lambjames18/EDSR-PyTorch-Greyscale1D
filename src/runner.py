@@ -91,7 +91,6 @@ else:
     else:
         device = torch.device('cpu')
 
-exit()
 
 # processed with the determined device, in this case cpu 
 lr = lr.to(device)
@@ -108,14 +107,31 @@ sr = _model(lr, 0)
 loss = _loss(sr, hr)
 loss.backward()
  
-if args.gclip > 0:
+'''if args.gclip > 0:
     utils.clip_grad_value_(
         _model.parameters(),
         args.gclip
-        )
-    optimizer.step()
+        )'''
+optimizer.step()
+timer_model.hold()
 
-    timer_model.hold()
+# logging the training status
+checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+(batch_idx + 1) * args.batch_size,
+len(loaderTrain.dataset),
+_loss.display_loss(batch_idx),
+timer_model.release(),
+timer_data.release()))
+
+print("Train status logged")
+
+timer_data.tic()
+
+_loss.end_log(len(loaderTrain))
+error_last = _loss.log[-1, -1]
+optimizer.schedule()
+print("Made to the end of the first train")
+
 
 # Now we can train and test the model
 # t = Trainer(args, loader, _model, _loss, checkpoint)
@@ -190,6 +206,7 @@ if args.gclip > 0:
 
             timer_model.hold()
 
+            # how many batches to wait before logging training status
             if (batch + 1) % self.args.print_every == 0:
                 self.ckp.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
                     (batch + 1) * self.args.batch_size,
