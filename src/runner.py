@@ -17,7 +17,7 @@ from trainer import Trainer
 # Act like this is the command line but bypass the commandline version so we can use a python script
 # args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
-# args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
+#args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -75,7 +75,6 @@ print("Timer set")
 
 # setting scale
 loaderTrain.dataset.set_scale(0)
-count = 0
 
 # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
 for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
@@ -126,10 +125,9 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     timer_model.release(),
     timer_data.release()))
 
-    print("Train status ", count, " logged")
+    print("Train status ", batch_idx + 1, " logged")
 
     timer_data.tic()
-    count+=1
 
 _loss.end_log(len(loaderTrain))
 error_last = _loss.log[-1, -1]
