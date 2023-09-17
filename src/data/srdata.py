@@ -53,7 +53,7 @@ class SRData(data.Dataset):
                     exist_ok=True
                 )'''
             
-            self.images_hr, self.images_lr = [], [[] for _ in self.scale]
+            self.images_hr, self.images_lr = [], []
             for h in list_hr:
                 if(h != ''):
                     b = h.replace(self.apath, path_bin)
@@ -65,7 +65,7 @@ class SRData(data.Dataset):
                     b = l.replace(self.apath, path_bin)
                     b = b.replace(self.ext[1], '.pt')
                     self.images_lr.append(b)
-                    self._check_and_load(args.ext, l, b, verbose=True) 
+                    self._check_and_load(args.ext, l, b, verbose=True)
         if train:
             n_patches = args.batch_size * args.test_every
             n_images = len(args.data_train) * len(self.images_hr)
@@ -137,6 +137,7 @@ class SRData(data.Dataset):
         elif self.args.ext.find('sep') >= 0:
             with open(f_hr, 'rb') as _f:
                 hr = pickle.load(_f)
+            # print("Filename to be loaded: ", f_lr)
             with open(f_lr, 'rb') as _f:
                 lr = pickle.load(_f)
 
