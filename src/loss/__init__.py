@@ -88,7 +88,8 @@ class Loss(nn.modules.loss._Loss):
 
         return ''.join(log)
 
-    def plot_loss(self, apath, epoch):
+    # def plot_loss(self, apath, epoch):
+    def plot_loss(self, epoch):
         axis = np.linspace(1, epoch, epoch)
         for i, l in enumerate(self.loss):
             label = '{} Loss'.format(l['type'])
@@ -99,7 +100,7 @@ class Loss(nn.modules.loss._Loss):
             plt.xlabel('Epochs')
             plt.ylabel('Loss')
             plt.grid(True)
-            plt.savefig(os.path.join(apath, 'loss_{}.pdf'.format(l['type'])))
+            # plt.savefig(os.path.join(apath, 'loss_{}.pdf'.format(l['type'])))
             plt.close(fig)
 
     def get_loss_module(self):

@@ -78,8 +78,9 @@ loaderTrain.dataset.set_scale(0)
 
 # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
 for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
-    print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
-    print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
+    print("Epoch num: ", epoch)
+    #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
+    #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
 
     # defining the device without the parallel processing in the given function
     if args.cpu:
@@ -124,6 +125,7 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     _loss.display_loss(batch_idx),
     timer_model.release(),
     timer_data.release()))
+    _loss.plot_loss()
 
     print("Train status ", batch_idx + 1, " logged")
 
