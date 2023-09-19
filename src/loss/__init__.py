@@ -92,16 +92,14 @@ class Loss(nn.modules.loss._Loss):
     # plotting the batch vs the loss instead of the epoch (which is consistently 1)
     def plot_loss(self, apath, batch_idx):
     # def plot_loss(self, epoch):
-        axis = np.arange(1, batch_idx + 2)
+        x_values = np.arange(1, len(self.log) + 1)
+        loss_values = self.log.numpy()
+
         for i, l in enumerate(self.loss):
             label = '{} Loss'.format(l['type'])
             fig = plt.figure()
             plt.title(label)
-
-            x = np.linspace(1, batch_idx + 1, len(self.log[:batch_idx + 1, i]))
-            y = self.log[:batch_idx + 1, i].numpy()
-            
-            plt.plot(x, y, label=label)
+            plt.plot(x_values, loss_values[:, i], label=label, marker = 'o')
             plt.legend()
             plt.xlabel('Batches')
             plt.ylabel('Loss')
