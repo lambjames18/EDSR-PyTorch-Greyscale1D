@@ -126,8 +126,10 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     timer_model.release(),
     timer_data.release()))
     # the path to where to save the loss function
-    apath = "/Users/anayakhan/Desktop/Pollock/dataset/lossFunction"
-    _loss.plot_loss(apath, epoch)
+    apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
+    _loss.plot_loss(apath, batch_idx)
+    print("Made to first plot")
+    exit()
 
     print("Train status ", batch_idx + 1, " logged")
 

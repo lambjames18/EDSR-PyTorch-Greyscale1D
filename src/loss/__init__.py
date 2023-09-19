@@ -103,6 +103,7 @@ class Loss(nn.modules.loss._Loss):
             plt.savefig(os.path.join(apath, 'loss_{}.pdf'.format(l['type'])))
             plt.close(fig)
 
+
     def get_loss_module(self):
         if self.n_GPUs == 1:
             return self.loss_module
