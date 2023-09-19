@@ -125,7 +125,7 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     _loss.display_loss(batch_idx),
     timer_model.release(),
     timer_data.release()))
-    _loss.plot_loss()
+    _loss.plot_loss(epoch)
 
     print("Train status ", batch_idx + 1, " logged")
 
