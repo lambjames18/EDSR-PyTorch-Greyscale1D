@@ -18,6 +18,7 @@ class Loss(nn.modules.loss._Loss):
 
         self.n_GPUs = args.n_GPUs
         self.loss = []
+        self.loss_list = []
         self.loss_module = nn.ModuleList()
         for loss in args.loss.split('+'):
             weight, loss_type = loss.split('*')
@@ -66,6 +67,8 @@ class Loss(nn.modules.loss._Loss):
         loss_sum = sum(losses)
         if len(self.loss) > 1:
             self.log[-1, -1] += loss_sum.item()
+        print("Losses: ", losses)
+        print("Loss sum: ", loss_sum)
 
         return loss_sum
 
@@ -80,14 +83,16 @@ class Loss(nn.modules.loss._Loss):
     def end_log(self, n_batches):
         self.log[-1].div_(n_batches)
 
+    def get_loss(self):
+        return self.loss_list()
+
     def display_loss(self, batch):
         n_samples = batch + 1
         log = []
-
-        print(self.loss)
-        print(self.log)
     
         for l, c in zip(self.loss, self.log[-1]):
+            print(" c / n_samples: ",  c / n_samples)
+            self.loss_list.append((c / n_samples).numpy())
             log.append('[{}: {:.4f}]'.format(l['type'], c / n_samples))
 
         return ''.join(log)

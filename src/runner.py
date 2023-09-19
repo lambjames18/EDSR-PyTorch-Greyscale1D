@@ -127,13 +127,14 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     timer_model.release(),
     timer_data.release()))
 
-    loss_list.append(_loss.display_loss(batch_idx))
+    loss_list.append(_loss.get_loss())
     # the path to where to save the loss function
     apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
     _loss.plot_loss(apath, batch_idx + 1)
     print("Made to plot")
 
     if(batch_idx == 5):
+        print(loss_list)
         exit()
 
     print("Train status ", batch_idx + 1, " logged")
