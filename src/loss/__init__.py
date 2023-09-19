@@ -83,6 +83,7 @@ class Loss(nn.modules.loss._Loss):
     def display_loss(self, batch):
         n_samples = batch + 1
         log = []
+    
         for l, c in zip(self.loss, self.log[-1]):
             log.append('[{}: {:.4f}]'.format(l['type'], c / n_samples))
 
@@ -95,7 +96,9 @@ class Loss(nn.modules.loss._Loss):
             label = '{} Loss'.format(l['type'])
             fig = plt.figure()
             plt.title(label)
-            plt.plot(axis, self.log[:, i].numpy(), label=label)
+            print("Plotting on the x: " , axis)
+            print("Plotting on the y: " , self.log[:, i].numpy())
+            plt.plot(axis, self.log[:, i].numpy(), label=label, marker = 'o')
             plt.legend()
             plt.xlabel('Epochs')
             plt.ylabel('Loss')
