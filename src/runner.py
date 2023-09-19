@@ -75,6 +75,7 @@ print("Timer set")
 
 # setting scale
 loaderTrain.dataset.set_scale(0)
+loss_list = []
 
 # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
 for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
@@ -125,6 +126,8 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     _loss.display_loss(batch_idx),
     timer_model.release(),
     timer_data.release()))
+
+    loss_list.append(_loss.display_loss(batch_idx))
     # the path to where to save the loss function
     apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
     _loss.plot_loss(apath, batch_idx + 1)
