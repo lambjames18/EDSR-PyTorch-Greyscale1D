@@ -97,7 +97,11 @@ class Loss(nn.modules.loss._Loss):
             label = '{} Loss'.format(l['type'])
             fig = plt.figure()
             plt.title(label)
-            plt.plot(axis, self.log[:batch_idx + 1, i].numpy(), label=label)
+
+            x = np.linspace(1, batch_idx + 1, len(self.log[:batch_idx + 1, i]))
+            y = self.log[:batch_idx + 1, i].numpy()
+            
+            plt.plot(x, y, label=label)
             plt.legend()
             plt.xlabel('Batches')
             plt.ylabel('Loss')
