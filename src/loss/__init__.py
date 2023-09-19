@@ -88,21 +88,26 @@ class Loss(nn.modules.loss._Loss):
 
         return ''.join(log)
 
-    def plot_loss(self, apath, epoch):
+    # plotting the batch vs the loss instead of the epoch (which is consistently 1)
+    def plot_loss(self, apath, batch_idx):
     # def plot_loss(self, epoch):
-        axis = np.linspace(1, epoch, epoch)
+        axis = np.arange(1, batch_idx + 2)
         for i, l in enumerate(self.loss):
             label = '{} Loss'.format(l['type'])
             fig = plt.figure()
             plt.title(label)
-            plt.plot(axis, self.log[:, i].numpy(), label=label)
+            plt.plot(axis, self.log[:batch_idx + 1, i].numpy(), label=label)
             plt.legend()
-            plt.xlabel('Epochs')
+            plt.xlabel('Batches')
             plt.ylabel('Loss')
             plt.grid(True)
             plt.savefig(os.path.join(apath, 'loss_{}.pdf'.format(l['type'])))
             plt.close(fig)
 
+    # loss display adjusted for this data 
+    #def plot_loss2(self, apath, batch_idx):
+     #   axis
+        
 
     def get_loss_module(self):
         if self.n_GPUs == 1:
