@@ -101,7 +101,7 @@ class Loss(nn.modules.loss._Loss):
             x = np.linspace(1, batch_idx + 1, len(self.log[:batch_idx + 1, i]))
             y = self.log[:batch_idx + 1, i].numpy()
             
-            plt.plot(x, y, label=label)
+            plt.plot(x, y, label=label, marker = 'o')
             plt.legend()
             plt.xlabel('Batches')
             plt.ylabel('Loss')
