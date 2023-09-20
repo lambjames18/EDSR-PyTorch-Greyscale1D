@@ -135,7 +135,8 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     timer_data.release()))
 
     # the path to where to save the loss function
-    apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
+    apath = args.dir_data + "/loss"
+    #apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
     _loss.plot_loss(apath, batch_idx + 1)
     print("Made to plot")
 
