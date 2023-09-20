@@ -1,11 +1,18 @@
 
 import torch
+import os
+
+import numpy as np
 
 import utility
 import data
 import model
 import loss
 import option_mod
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 # for testing the Train
 from decimal import Decimal
@@ -127,14 +134,27 @@ for batch_idx, (lr, hr, _,) in enumerate(loaderTrain):
     timer_model.release(),
     timer_data.release()))
 
-    loss_list.append(_loss.get_loss())
     # the path to where to save the loss function
     apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
     _loss.plot_loss(apath, batch_idx + 1)
     print("Made to plot")
 
-    if(batch_idx == 5):
-        print(loss_list)
+    if(batch_idx == 20):
+        print(_loss.get_loss())
+        x_values = np.arange(1, batch_idx + 2)
+        y_values = _loss.get_loss()
+
+        # makeshift loss function save
+        fig = plt.figure()
+        plt.title("Loss Function epoch 1")
+        plt.plot(x_values, y_values, marker = 'o')
+        plt.xlabel('Batches')
+        plt.ylabel('Loss')
+        plt.grid(True)
+        plt.savefig(os.path.join(apath, 'loss_1.pdf'))
+        plt.close(fig)
+
+
         exit()
 
     print("Train status ", batch_idx + 1, " logged")
