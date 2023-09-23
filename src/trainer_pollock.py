@@ -3,8 +3,11 @@ import utility
 
 import torch
 import torch.nn.utils as utils
-import matplotlib as plt
 import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss):
@@ -88,8 +91,8 @@ class Trainer():
             loss_list.append(self.loss.get_loss())
             # the path to where to save the loss function
             apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
-            self.loss.plot_loss(apath, batch_idx + 1)
-            print("Made to plot")
+            # self.loss.plot_loss(apath, batch_idx + 1)
+            # print("Made to plot")
 
             if(batch_idx == 20):
                 print(self.loss.get_loss())
