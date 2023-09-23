@@ -84,8 +84,7 @@ class Loss(nn.modules.loss._Loss):
         self.log[-1].div_(n_batches)
 
     def get_loss(self):
-        # erroring 
-        return self.loss_list()
+        return self.loss_list
 
     def display_loss(self, batch):
         n_samples = batch + 1
