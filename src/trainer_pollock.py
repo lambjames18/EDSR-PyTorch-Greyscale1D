@@ -3,6 +3,8 @@ import utility
 
 import torch
 import torch.nn.utils as utils
+import matplotlib as plt
+import numpy as np
 
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss):
@@ -89,13 +91,27 @@ class Trainer():
             self.loss.plot_loss(apath, batch_idx + 1)
             print("Made to plot")
 
-            if(batch_idx == 5):
-                print(loss_list)
+            if(batch_idx == 20):
+                print(self.loss.get_loss())
+                x_values = np.arange(1, batch_idx + 2)
+                y_values = self.loss.get_loss()
+
+                # makeshift loss function save
+                fig = plt.figure()
+                plt.title("Loss Function epoch 1")
+                plt.plot(x_values, y_values, marker = 'o')
+                plt.xlabel('Batches')
+                plt.ylabel('Loss')
+                plt.grid(True)
+                plt.savefig(os.path.join(apath, 'loss_1.pdf'))
+                plt.close(fig)
+
+
                 exit()
 
-            print("Train status ", batch_idx + 1, " logged")
+        print("Train status ", batch_idx + 1, " logged")
+        timer_data.tic()
 
-            timer_data.tic()
 
         self.loss.end_log(len(self.loaderTrain))
         error_last = self.loss.log[-1, -1]
