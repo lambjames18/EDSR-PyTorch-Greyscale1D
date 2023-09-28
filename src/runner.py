@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 from trainer_pollock import Trainer
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
-#args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
-args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
+args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
+#args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
@@ -42,10 +42,15 @@ if not checkpoint.ok:
 
 # This is a class that loads the data
 loader = data.Data(args)  # loader needs to have two attributes: loader_train and loader_test
+
+# testing the dataloader 
+exit()
+
 print("Test: ", loader.loader_test)
 print("Train: ", loader.loader_train)
 # This is a class that loads the model
 _model = model.Model(args, checkpoint)
+
 # This is a class that loads the loss function
 if args.test_only:
     _loss = None

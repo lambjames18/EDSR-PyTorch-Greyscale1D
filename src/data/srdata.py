@@ -9,6 +9,7 @@ import numpy as np
 import imageio
 import torch
 import torch.utils.data as data
+from skimage import io, transform
 
 class SRData(data.Dataset):
     def __init__(self, args, name='', train=True, benchmark=False):
@@ -78,8 +79,6 @@ class SRData(data.Dataset):
         names_hr = sorted(
             glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))
         )
-
-        #names_lr = [[] for _ in self.scale]
         
         names_lr = sorted(
             glob.glob(os.path.join(self.dir_lr, '*' + self.ext[1]))
@@ -90,9 +89,64 @@ class SRData(data.Dataset):
 
     def _set_filesystem(self, dir_data):
         self.apath = os.path.abspath(dir_data)
-        self.dir_hr = os.path.join(self.apath, self.split, 'HR')
+        self.raw = os.path.join(self.apath, 'raw_2')
+
+        # high resolution
+        self.dir_hr = os.path.join(self.apath, 'HR_2')
+        os.makedirs(self.dir_hr, exist_ok=True)
+
+        self.dir_lr = os.path.join(self.apath, 'LR_2')
+        os.makedirs(self.dir_lr, exist_ok=True)
+
+        # fill the high res and low res
+        for file in os.listdir(self.raw):
+            img = io.imread(self.raw + "/" + file)
+
+            # high
+            top_left = img[:2000, :2000]
+            io.imsave(os.path.join(self.dir_hr, file + '_tl.tiff'), top_left)
+            # low
+            top_leftLow = transform.downscale_local_mean(top_left, (4,1))
+            top_leftLow = (255 * top_leftLow/top_leftLow.max()).astype('uint8')
+            io.imsave(os.path.join(self.dir_lr, file + '_tlLow.tiff'), top_leftLow)
+
+            # high
+            top_right = img[:2000, 2000:4000]
+            io.imsave(os.path.join(self.dir_hr, file + '_tr.tiff'), top_right)
+            # low
+            top_rightLow = transform.downscale_local_mean(top_right, (4,1))
+            top_rightLow = (255 * top_rightLow/top_rightLow.max()).astype('uint8')
+            io.imsave(os.path.join(self.dir_lr, file + '_trLow.tiff'), top_rightLow)
+
+            # high
+            bot_left = img[2000:4000, :2000]
+            io.imsave(os.path.join(self.dir_hr, file + '_bl.tiff'), bot_left)
+            # low
+            bot_leftLow = transform.downscale_local_mean(bot_left, (4,1))
+            bot_leftLow = (255 * bot_leftLow/bot_leftLow.max()).astype('uint8')
+            io.imsave(os.path.join(self.dir_lr, file + '_blLow.tiff'), bot_leftLow)
+
+            # high
+            bot_right = img[2000:4000, 2000:4000]
+            io.imsave(os.path.join(self.dir_hr, file + '_br.tiff'), bot_right)
+            # low 
+            bot_rightLow = transform.downscale_local_mean(bot_right, (4,1))
+            bot_rightLow = (255 * bot_rightLow/bot_rightLow.max()).astype('uint8')
+            io.imsave(os.path.join(self.dir_lr, file + '_brLow.tiff'), bot_rightLow)
+
+        print("Made")
+
+        # filling the low 
+        
+
+        #self.dir_lr = os.path.join(self.apath, 'LR')
+        #os.makedirs(self.dir_lr, exist_ok=True)
+        # self.dir_hr = os.path.join(self.apath, self.split, 'HR')
+        #dir_hr = os.path.join(self.apath, dir_data)
+        
+        #self.dir_hr = os.path.join(self.apath, self.split, 'HR')
         # changed from LR_bicubic
-        self.dir_lr = os.path.join(self.apath, self.split, 'LR')
+        #self.dir_lr = os.path.join(self.apath, self.split, 'LR')
         self.ext = ('.tiff', '.tiff')
 
     def _check_and_load(self, ext, img, f, verbose=True):
@@ -158,6 +212,7 @@ class SRData(data.Dataset):
             hr = hr[0:ih * scale, 0:iw * scale]
 
         return lr, hr
+
 
     def set_scale(self, idx_scale):
         if not self.input_large:

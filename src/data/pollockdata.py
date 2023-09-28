@@ -2,6 +2,7 @@ import os
 from data import srdata
 
 # modelled after div2k for training with srdata Dataset
+# modified to take just the raw data and create the high and low res images 
 class pollockData(srdata.SRData):
     def __init__(self, args, name='pollockData', train=True, benchmark=False):
         data_range = [r.split('-') for r in args.data_range.split('/')]
