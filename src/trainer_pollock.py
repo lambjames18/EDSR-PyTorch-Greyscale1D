@@ -49,7 +49,9 @@ class Trainer():
         loss_list = []
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-        for batch_idx, (lr, hr, _,) in enumerate(self.loaderTot):
+        train_indices, test_indices = KFold(n_splits = self.kFold, shuffle=True, random_state=42).split(self.loaderTot)
+        print("KFold split", train_indices, test_indices)
+        for batch_idx, (lr, hr, _,) in enumerate(self.loaderTot[train_indices]):
             print("Epoch num: ", epoch)
             #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
             #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
