@@ -43,19 +43,17 @@ if not checkpoint.ok:
 # This is a class that loads the data
 loader = data.Data(args)  # loader needs to have two attributes: loader_train and loader_test
 
-# testing the dataloader 
-exit()
-
-print("Test: ", loader.loader_test)
-print("Train: ", loader.loader_train)
 # This is a class that loads the model
 _model = model.Model(args, checkpoint)
 
 # This is a class that loads the loss function
-if args.test_only:
+# we wont use test only
+'''if args.test_only:
     _loss = None
 else:
-    _loss = loss.Loss(args, checkpoint)
+    _loss = loss.Loss(args, checkpoint)'''
+
+_loss = loss.Loss(args, checkpoint)
 
 # creating the training object
 trainer = Trainer(args, loader, _model, _loss)

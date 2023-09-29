@@ -98,43 +98,7 @@ class SRData(data.Dataset):
         self.dir_lr = os.path.join(self.apath, 'LR_2')
         os.makedirs(self.dir_lr, exist_ok=True)
 
-        # fill the high res and low res
-        for file in os.listdir(self.raw):
-            img = io.imread(self.raw + "/" + file)
-
-            # high
-            top_left = img[:2000, :2000]
-            io.imsave(os.path.join(self.dir_hr, file + '_tl.tiff'), top_left)
-            # low
-            top_leftLow = transform.downscale_local_mean(top_left, (4,1))
-            top_leftLow = (255 * top_leftLow/top_leftLow.max()).astype('uint8')
-            io.imsave(os.path.join(self.dir_lr, file + '_tlLow.tiff'), top_leftLow)
-
-            # high
-            top_right = img[:2000, 2000:4000]
-            io.imsave(os.path.join(self.dir_hr, file + '_tr.tiff'), top_right)
-            # low
-            top_rightLow = transform.downscale_local_mean(top_right, (4,1))
-            top_rightLow = (255 * top_rightLow/top_rightLow.max()).astype('uint8')
-            io.imsave(os.path.join(self.dir_lr, file + '_trLow.tiff'), top_rightLow)
-
-            # high
-            bot_left = img[2000:4000, :2000]
-            io.imsave(os.path.join(self.dir_hr, file + '_bl.tiff'), bot_left)
-            # low
-            bot_leftLow = transform.downscale_local_mean(bot_left, (4,1))
-            bot_leftLow = (255 * bot_leftLow/bot_leftLow.max()).astype('uint8')
-            io.imsave(os.path.join(self.dir_lr, file + '_blLow.tiff'), bot_leftLow)
-
-            # high
-            bot_right = img[2000:4000, 2000:4000]
-            io.imsave(os.path.join(self.dir_hr, file + '_br.tiff'), bot_right)
-            # low 
-            bot_rightLow = transform.downscale_local_mean(bot_right, (4,1))
-            bot_rightLow = (255 * bot_rightLow/bot_rightLow.max()).astype('uint8')
-            io.imsave(os.path.join(self.dir_lr, file + '_brLow.tiff'), bot_rightLow)
-
-        print("Made")
+        self.fill_HR_LR()
 
         # filling the low 
         
@@ -148,6 +112,27 @@ class SRData(data.Dataset):
         # changed from LR_bicubic
         #self.dir_lr = os.path.join(self.apath, self.split, 'LR')
         self.ext = ('.tiff', '.tiff')
+
+    # fills the high res and low res folders from the raw
+    def fill_HR_LR(self):
+        # list of images 
+        imgs = []
+        for file in os.listdir(self.raw):
+            if file.endswith('.tif'):
+                imgs.append(io.imread(os.path.join(self.raw, file)))
+
+        # fill the high res and low res
+        count_train = 0
+        for i in range(len(imgs)):
+            img = imgs[i]
+            img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
+            for j in range(4):
+                img_temp = img_split[j]
+                img_temp_down = transform.downscale_local_mean(img_temp, (4,1))
+                img_temp_down = (255 * img_temp_down/img_temp_down.max()).astype('uint8')
+                io.imsave(os.path.join(self.dir_hr, f'{count_train}.tiff'), img_temp)
+                io.imsave(os.path.join(self.dir_lr, f'{count_train}.tiff'), img_temp_down)
+                count_train += 1
 
     def _check_and_load(self, ext, img, f, verbose=True):
         if not os.path.isfile(f) or ext.find('reset') >= 0:

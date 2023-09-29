@@ -9,17 +9,22 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+from sklearn.model_selection import KFold
+
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss):
         self.args = args
         self.loss = my_loss
         self.model = my_model
-        self.loaderTrain = loader.loader_train
-        self.loaderTest = loader.loader_test
+        # includes the total list of hr and low res
+        self.loaderTot = loader.total_loader
+        #self.loaderTest = loader.loader_test
         self.optimizer = utility.make_optimizer(self.args, self.model)
         self.checkpoint = utility.checkpoint(self.args)
     
     def train(self):
+        # there are 4 loops for each image
+        self.kFold = 4
         self.loss.step()
 
         # logs current epoch number and learning rate from optimizer
@@ -40,11 +45,11 @@ class Trainer():
         print("Timer set")
 
         # setting scale
-        self.loaderTrain.dataset.set_scale(0)
+        self.loaderTot.testset.set_scale(0)
         loss_list = []
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-        for batch_idx, (lr, hr, _,) in enumerate(self.loaderTrain):
+        for batch_idx, (lr, hr, _,) in enumerate(self.loaderTot):
             print("Epoch num: ", epoch)
             #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
             #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
