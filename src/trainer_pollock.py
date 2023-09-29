@@ -11,6 +11,11 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold
 
+# steps: 
+# fix loader reading 
+# kfold validation holdout 
+# for loops for 10 epochs
+# separate into validation and train, assuming its already in the test and train
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss):
         self.args = args
@@ -45,11 +50,11 @@ class Trainer():
         print("Timer set")
 
         # setting scale
-        self.loaderTot.testset.set_scale(0)
+        # self.loaderTot.testset.set_scale(0)
         loss_list = []
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-        for batch_idx, (lr, hr, _,) in enumerate(self.loaderTot):
+        for batch_idx, (lr, hr) in enumerate(self.loaderTot):
             print("Epoch num: ", epoch)
             #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
             #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))

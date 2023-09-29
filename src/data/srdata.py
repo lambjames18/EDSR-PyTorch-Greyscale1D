@@ -31,42 +31,11 @@ class SRData(data.Dataset):
             #path_bin = os.path.join(self.apath, 'bin')
             os.makedirs(path_bin, exist_ok=True)
         
-        list_hr, list_lr = self._scan()
+        # list_hr, list_lr = self._scan()
+        self.images_hr, self.images_lr = self.fill_HR_LR()
+        print(self.images_hr)
+        print(self.images_lr)
         
-        if args.ext.find('img') >= 0 or benchmark:
-            self.images_hr, self.images_lr = list_hr, list_lr
-        elif args.ext.find('sep') >= 0:
-            os.makedirs(
-                self.dir_hr.replace(self.apath, path_bin),
-                exist_ok=True
-            )
-            os.makedirs(
-                self.dir_lr.replace(self.apath, path_bin),
-                exist_ok=True
-            )
-
-            '''for s in self.scale:
-                os.makedirs(
-                    os.path.join(
-                        self.dir_lr.replace(self.apath, path_bin),
-                        'X{}'.format(s)
-                    ),
-                    exist_ok=True
-                )'''
-            
-            self.images_hr, self.images_lr = [], []
-            for h in list_hr:
-                if(h != ''):
-                    b = h.replace(self.apath, path_bin)
-                    b = b.replace(self.ext[0], '.pt')
-                    self.images_hr.append(b)
-                    self._check_and_load(args.ext, h, b, verbose=True)
-            for l in list_lr:
-                if(l != ''):
-                    b = l.replace(self.apath, path_bin)
-                    b = b.replace(self.ext[1], '.pt')
-                    self.images_lr.append(b)
-                    self._check_and_load(args.ext, l, b, verbose=True)
         if train:
             n_patches = args.batch_size * args.test_every
             n_images = len(args.data_train) * len(self.images_hr)
@@ -90,19 +59,17 @@ class SRData(data.Dataset):
     def _set_filesystem(self, dir_data):
         self.apath = os.path.abspath(dir_data)
         self.raw = os.path.join(self.apath, 'raw_2')
+        self.ext = ('.tiff', '.tiff')
 
         # high resolution
-        self.dir_hr = os.path.join(self.apath, 'HR_2')
-        os.makedirs(self.dir_hr, exist_ok=True)
+        # self.dir_hr = os.path.join(self.apath, 'HR_2')
+        #os.makedirs(self.dir_hr, exist_ok=True)
 
-        self.dir_lr = os.path.join(self.apath, 'LR_2')
-        os.makedirs(self.dir_lr, exist_ok=True)
+        # self.dir_lr = os.path.join(self.apath, 'LR_2')
+        # os.makedirs(self.dir_lr, exist_ok=True)
 
-        self.fill_HR_LR()
-
-        # filling the low 
-        
-
+        # self.fill_HR_LR()
+    
         #self.dir_lr = os.path.join(self.apath, 'LR')
         #os.makedirs(self.dir_lr, exist_ok=True)
         # self.dir_hr = os.path.join(self.apath, self.split, 'HR')
@@ -111,18 +78,21 @@ class SRData(data.Dataset):
         #self.dir_hr = os.path.join(self.apath, self.split, 'HR')
         # changed from LR_bicubic
         #self.dir_lr = os.path.join(self.apath, self.split, 'LR')
-        self.ext = ('.tiff', '.tiff')
 
     # fills the high res and low res folders from the raw
+    # save to the high res and low res, dont save
     def fill_HR_LR(self):
         # list of images 
         imgs = []
+        hr_list = []
+        lr_list = []
+
         for file in os.listdir(self.raw):
             if file.endswith('.tif'):
                 imgs.append(io.imread(os.path.join(self.raw, file)))
 
         # fill the high res and low res
-        count_train = 0
+        # count_train = 0
         for i in range(len(imgs)):
             img = imgs[i]
             img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
@@ -130,24 +100,29 @@ class SRData(data.Dataset):
                 img_temp = img_split[j]
                 img_temp_down = transform.downscale_local_mean(img_temp, (4,1))
                 img_temp_down = (255 * img_temp_down/img_temp_down.max()).astype('uint8')
-                io.imsave(os.path.join(self.dir_hr, f'{count_train}.tiff'), img_temp)
-                io.imsave(os.path.join(self.dir_lr, f'{count_train}.tiff'), img_temp_down)
-                count_train += 1
+                hr_list.append(img_temp)
+                lr_list.append(img_temp_down)
+                '''io.imsave(os.path.join(self.dir_hr, f'{count_train}.tiff'), img_temp)
+                io.imsave(os.path.join(self.dir_lr, f'{count_train}.tiff'), img_temp_down)'''
+                # count_train += 1
+        return hr_list, lr_list
 
-    def _check_and_load(self, ext, img, f, verbose=True):
+    # dont care 
+    '''def _check_and_load(self, ext, img, f, verbose=True):
         if not os.path.isfile(f) or ext.find('reset') >= 0:
             if verbose:
                 print('Making a binary: {}'.format(f))
             with open(f, 'wb') as _f:
-                pickle.dump(imageio.imread(img), _f)
+                pickle.dump(imageio.imread(img), _f)'''
 
     def __getitem__(self, idx):
-        lr, hr, filename = self._load_file(idx)
+        lr, hr = self._load_file(idx)
         pair = self.get_patch(lr, hr)
         # print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
-        return pair_t[0], pair_t[1], filename
+        # return pair_t[0], pair_t[1], filename
+        return pair_t[0], pair_t[1]
 
     def __len__(self):
         if self.train:
@@ -167,20 +142,24 @@ class SRData(data.Dataset):
         # f_lr = self.images_lr[self.idx_scale][idx]
         f_lr = self.images_lr[idx]
 
-        filename, _ = os.path.splitext(os.path.basename(f_hr))
-        if self.args.ext == 'img' or self.benchmark:
-            hr = imageio.imread(f_hr)
-            hr = hr.reshape(hr.shape[0], hr.shape[1], 1)
-            lr = imageio.imread(f_lr)
-            lr = lr.reshape(lr.shape[0], lr.shape[1], 1)
-        elif self.args.ext.find('sep') >= 0:
+        # filename, _ = os.path.splitext(os.path.basename(f_hr))
+        # if self.args.ext == 'img' or self.benchmark:
+
+
+        # hr = imageio.imread(f_hr)
+        f_hr = f_hr.reshape(f_hr.shape[0], f_hr.shape[1], 1)
+        # lr = imageio.imread(f_lr)
+        f_lr = f_lr.reshape(f_lr.shape[0], f_lr.shape[1], 1)
+
+
+        '''elif self.args.ext.find('sep') >= 0:
             with open(f_hr, 'rb') as _f:
                 hr = pickle.load(_f)
             # print("Filename to be loaded: ", f_lr)
             with open(f_lr, 'rb') as _f:
-                lr = pickle.load(_f)
+                lr = pickle.load(_f)'''
 
-        return lr, hr, filename
+        return f_lr, f_hr
 
     def get_patch(self, lr, hr):
         scale = self.scale[self.idx_scale]
