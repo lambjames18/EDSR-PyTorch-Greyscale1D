@@ -36,13 +36,14 @@ class SRData(data.Dataset):
         # print(self.images_hr)
         # print(self.images_lr)
         
-        if train:
-            n_patches = args.batch_size * args.test_every
-            n_images = len(args.data_train) * len(self.images_hr)
-            if n_images == 0:
-                self.repeat = 0
-            else:
-                self.repeat = max(n_patches // n_images, 1)
+    def set_as_training(self):
+        self.train = True
+        n_patches = self.args.batch_size * self.args.test_every
+        n_images = len(self.args.data_train) * len(self.images_hr)
+        if n_images == 0:
+            self.repeat = 0
+        else:
+            self.repeat = max(n_patches // n_images, 1)
 
     def _scan(self):
         names_hr = sorted(

@@ -64,16 +64,14 @@ class Data:
             m = import_module('data.' + module_name.lower())
             testset = getattr(m, module_name)(args, train=False, name=module_name)
         
-        self.total_loader.append(
-            dataloader.DataLoader(
-                testset,
-                batch_size=1,
-                shuffle=False,
-                pin_memory=not args.cpu,
+        self.total_loader = dataloader.DataLoader(
+            testset,
+            batch_size=1,
+            shuffle=False,
+            pin_memory=not args.cpu,
                 #num_workers=args.n_threads,
                 # for testing
-                num_workers= 0,
-            )
+            num_workers= 0,
         )
 
 

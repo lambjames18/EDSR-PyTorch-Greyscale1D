@@ -56,6 +56,7 @@ else:
 _loss = loss.Loss(args, checkpoint)
 
 # creating the training object
+# kfold here, before running train class 
 trainer = Trainer(args, loader, _model, _loss)
 # training the data
 trainer.train()
