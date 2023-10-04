@@ -33,8 +33,8 @@ class SRData(data.Dataset):
         
         # list_hr, list_lr = self._scan()
         self.images_hr, self.images_lr = self.fill_HR_LR()
-        print(self.images_hr)
-        print(self.images_lr)
+        # print(self.images_hr)
+        # print(self.images_lr)
         
         if train:
             n_patches = args.batch_size * args.test_every
@@ -117,8 +117,13 @@ class SRData(data.Dataset):
 
     def __getitem__(self, idx):
         lr, hr = self._load_file(idx)
+        # print("Lr for patch: ", lr)
+        print("LR Shape: ", lr.shape)
+        
+        # print("Hr for patch: ", hr)
+        print("HR Shape: ", hr.shape)
         pair = self.get_patch(lr, hr)
-        # print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
+        print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
         # return pair_t[0], pair_t[1], filename
@@ -139,8 +144,11 @@ class SRData(data.Dataset):
     def _load_file(self, idx):
         idx = self._get_index(idx)
         f_hr = self.images_hr[idx]
+        print("f_hr shape: ", f_hr.shape)
         # f_lr = self.images_lr[self.idx_scale][idx]
+        
         f_lr = self.images_lr[idx]
+        print("f_lr shape: ", f_lr.shape)
 
         # filename, _ = os.path.splitext(os.path.basename(f_hr))
         # if self.args.ext == 'img' or self.benchmark:
@@ -163,6 +171,11 @@ class SRData(data.Dataset):
 
     def get_patch(self, lr, hr):
         scale = self.scale[self.idx_scale]
+
+        if type(scale) is str:
+            scale = int(scale)
+
+        print("Training?: ", self.train)
         if self.train:
             lr, hr = common.get_patch(
                 lr, hr,
