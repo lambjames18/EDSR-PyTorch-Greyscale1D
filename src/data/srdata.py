@@ -119,12 +119,9 @@ class SRData(data.Dataset):
     def __getitem__(self, idx):
         lr, hr = self._load_file(idx)
         # print("Lr for patch: ", lr)
-        print("LR Shape: ", lr.shape)
-        
         # print("Hr for patch: ", hr)
-        print("HR Shape: ", hr.shape)
         pair = self.get_patch(lr, hr)
-        print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
+        # print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
         # return pair_t[0], pair_t[1], filename
@@ -145,11 +142,11 @@ class SRData(data.Dataset):
     def _load_file(self, idx):
         idx = self._get_index(idx)
         f_hr = self.images_hr[idx]
-        print("f_hr shape: ", f_hr.shape)
+        # print("f_hr shape: ", f_hr.shape)
         # f_lr = self.images_lr[self.idx_scale][idx]
         
         f_lr = self.images_lr[idx]
-        print("f_lr shape: ", f_lr.shape)
+        # print("f_lr shape: ", f_lr.shape)
 
         # filename, _ = os.path.splitext(os.path.basename(f_hr))
         # if self.args.ext == 'img' or self.benchmark:
@@ -176,7 +173,7 @@ class SRData(data.Dataset):
         if type(scale) is str:
             scale = int(scale)
 
-        print("Training?: ", self.train)
+        # print("Training?: ", self.train)
         if self.train:
             lr, hr = common.get_patch(
                 lr, hr,

@@ -20,6 +20,7 @@ import torch.nn.utils as utils
 import matplotlib.pyplot as plt
 
 from trainer_pollock import Trainer
+from sklearn.model_selection import KFold
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
 args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
@@ -57,6 +58,25 @@ _loss = loss.Loss(args, checkpoint)
 
 # creating the training object
 # kfold here, before running train class 
-trainer = Trainer(args, loader, _model, _loss)
+
+# runs a new trainer for each set of indices returned
+splits = 5
+kf = KFold(n_splits=splits)
+print(len(loader.total_loader))
+X = [(lr, hr) for (lr, hr) in loader.total_loader]
+
+for trainInd, testInd in kf.split(X):
+    print("Test: ", testInd)
+    print("Train: ", trainInd)
+    
+    trainer = Trainer(args, loader, _model, _loss, trainInd, testInd)
+    # beginning with running the training
+    trainer.run()
+
+# train_indices, test_indices = KFold(n_splits = kFold, shuffle=True, random_state=42).split(loader.total_loader.dataset)
+# print("KFold split", train_indices, test_indices)
+# print( KFold(n_splits = kFold, shuffle=True, random_state=42).split(loader.total_loader.dataset))
+
+#trainer = Trainer(args, loader, _model, _loss)
 # training the data
-trainer.train()
+# trainer.train()

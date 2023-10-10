@@ -60,6 +60,7 @@ class Data:
 
         if type(args.data_test) is str:
             args.data_test = [args.data_test]
+
         for module_name in args.data_test:
             m = import_module('data.' + module_name.lower())
             testset = getattr(m, module_name)(args, train=False, name=module_name)
@@ -69,8 +70,8 @@ class Data:
             batch_size=1,
             shuffle=False,
             pin_memory=not args.cpu,
-                #num_workers=args.n_threads,
-                # for testing
+            #num_workers=args.n_threads,
+            # for testing
             num_workers= 0,
         )
 

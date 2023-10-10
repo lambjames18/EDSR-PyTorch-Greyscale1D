@@ -17,19 +17,38 @@ from sklearn.model_selection import KFold
 # for loops for 10 epochs
 # separate into validation and train, assuming its already in the test and train
 class Trainer():
-    def __init__(self, args, loader, my_model, my_loss):
+    def __init__(self, args, loader, my_model, my_loss, trainInd, testInd):
         self.args = args
         self.loss = my_loss
         self.model = my_model
-        # includes the total list of hr and low res
         self.loaderTot = loader.total_loader
-        #self.loaderTest = loader.loader_test
+        self.trainTnd = trainInd
+        self.testInd = testInd
         self.optimizer = utility.make_optimizer(self.args, self.model)
         self.checkpoint = utility.checkpoint(self.args)
     
+    # splits the training and testing based off of the indices 
+    # runs the training and testing accordingly
+    def run(self): 
+        train_files = []
+        test_files = []
+
+        for batch_ind in self.trainTnd:
+            data_train = self.loaderTot.dataset[batch_ind]
+            train_files.append(data_train)
+
+        for batch_ind in self.testInd: 
+            data_test = self.loaderTot.dataset[batch_ind]
+            test_files.append(data_test)
+        
+        self.trainTot = train_files
+        self.testTot = test_files
+
+        self.train()
+        # eventually self.test()
+    
+
     def train(self):
-        # there are 4 loops for each image
-        self.kFold = 4
         self.loss.step()
 
         # logs current epoch number and learning rate from optimizer
@@ -54,16 +73,12 @@ class Trainer():
         loss_list = []
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-
-        # testing the kfold
-        # train_indices, test_indices = KFold(n_splits = self.kFold, shuffle=True, random_state=42).split(self.loaderTot)
-        # print("KFold split", train_indices, test_indices)
         self.loaderTot.dataset.set_as_training()
-        for batch_idx, (lr, hr) in enumerate(self.loaderTot):
+        for batch_idx, (lr, hr) in enumerate(self.trainTot):
             print("Lr shape: ", lr.shape)
             print("Hr shape: ", hr.shape)
             print("Epoch num: ", epoch)
-            exit()
+            
             #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
             #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
 
