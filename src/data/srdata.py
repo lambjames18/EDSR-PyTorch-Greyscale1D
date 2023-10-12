@@ -25,16 +25,9 @@ class SRData(data.Dataset):
         
     
         self._set_filesystem(args.dir_data)
-
-        if args.ext.find('img') < 0:
-            path_bin = os.path.join(self.apath, 'bin')
-            #path_bin = os.path.join(self.apath, 'bin')
-            os.makedirs(path_bin, exist_ok=True)
         
-        # list_hr, list_lr = self._scan()
         self.images_hr, self.images_lr = self.fill_HR_LR()
-        # print(self.images_hr)
-        # print(self.images_lr)
+
         
     def set_as_training(self):
         self.train = True
@@ -54,31 +47,12 @@ class SRData(data.Dataset):
             glob.glob(os.path.join(self.dir_lr, '*' + self.ext[1]))
         )
         
-        #return names_hr[:1], [lr_list[:1] for lr_list in names_lr]
         return names_hr, names_lr
 
     def _set_filesystem(self, dir_data):
         self.apath = os.path.abspath(dir_data)
         self.raw = os.path.join(self.apath, 'raw_2')
         self.ext = ('.tiff', '.tiff')
-
-        # high resolution
-        # self.dir_hr = os.path.join(self.apath, 'HR_2')
-        #os.makedirs(self.dir_hr, exist_ok=True)
-
-        # self.dir_lr = os.path.join(self.apath, 'LR_2')
-        # os.makedirs(self.dir_lr, exist_ok=True)
-
-        # self.fill_HR_LR()
-    
-        #self.dir_lr = os.path.join(self.apath, 'LR')
-        #os.makedirs(self.dir_lr, exist_ok=True)
-        # self.dir_hr = os.path.join(self.apath, self.split, 'HR')
-        #dir_hr = os.path.join(self.apath, dir_data)
-        
-        #self.dir_hr = os.path.join(self.apath, self.split, 'HR')
-        # changed from LR_bicubic
-        #self.dir_lr = os.path.join(self.apath, self.split, 'LR')
 
     # fills the high res and low res folders from the raw
     # save to the high res and low res, dont save
@@ -103,18 +77,7 @@ class SRData(data.Dataset):
                 img_temp_down = (255 * img_temp_down/img_temp_down.max()).astype('uint8')
                 hr_list.append(img_temp)
                 lr_list.append(img_temp_down)
-                '''io.imsave(os.path.join(self.dir_hr, f'{count_train}.tiff'), img_temp)
-                io.imsave(os.path.join(self.dir_lr, f'{count_train}.tiff'), img_temp_down)'''
-                # count_train += 1
         return hr_list, lr_list
-
-    # dont care 
-    '''def _check_and_load(self, ext, img, f, verbose=True):
-        if not os.path.isfile(f) or ext.find('reset') >= 0:
-            if verbose:
-                print('Making a binary: {}'.format(f))
-            with open(f, 'wb') as _f:
-                pickle.dump(imageio.imread(img), _f)'''
 
     def __getitem__(self, idx):
         lr, hr = self._load_file(idx)
@@ -124,7 +87,6 @@ class SRData(data.Dataset):
         # print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
-        # return pair_t[0], pair_t[1], filename
         return pair_t[0], pair_t[1]
 
     def __len__(self):
@@ -142,20 +104,18 @@ class SRData(data.Dataset):
     def _load_file(self, idx):
         idx = self._get_index(idx)
         f_hr = self.images_hr[idx]
-        # print("f_hr shape: ", f_hr.shape)
         # f_lr = self.images_lr[self.idx_scale][idx]
         
         f_lr = self.images_lr[idx]
-        # print("f_lr shape: ", f_lr.shape)
 
         # filename, _ = os.path.splitext(os.path.basename(f_hr))
         # if self.args.ext == 'img' or self.benchmark:
 
 
         # hr = imageio.imread(f_hr)
-        f_hr = f_hr.reshape(f_hr.shape[0], f_hr.shape[1], 1)
+        #f_hr = f_hr.reshape(f_hr.shape[0], f_hr.shape[1], 1)
         # lr = imageio.imread(f_lr)
-        f_lr = f_lr.reshape(f_lr.shape[0], f_lr.shape[1], 1)
+        #f_lr = f_lr.reshape(f_lr.shape[0], f_lr.shape[1], 1)
 
 
         '''elif self.args.ext.find('sep') >= 0:
@@ -164,7 +124,8 @@ class SRData(data.Dataset):
             # print("Filename to be loaded: ", f_lr)
             with open(f_lr, 'rb') as _f:
                 lr = pickle.load(_f)'''
-
+        
+        # this is the image
         return f_lr, f_hr
 
     def get_patch(self, lr, hr):

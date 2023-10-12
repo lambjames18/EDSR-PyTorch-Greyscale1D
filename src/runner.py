@@ -63,11 +63,18 @@ _loss = loss.Loss(args, checkpoint)
 splits = 5
 kf = KFold(n_splits=splits)
 print(len(loader.total_loader))
-X = [(lr, hr) for (lr, hr) in loader.total_loader]
+#loader.total_loader.dataset.set_as_training()
+# list of 0s 
+#X = [(lr, hr) for (lr, hr) in loader.total_loader]
+X = np.zeros(len(loader.total_loader))
 
-for trainInd, testInd in kf.split(X):
-    print("Test: ", testInd)
-    print("Train: ", trainInd)
+
+for fold, (trainInd, testInd) in enumerate(kf.split(X)):
+    print(f'Fold {fold}')
+    print("-----------------------------------")
+
+    print("Test indices: ", testInd)
+    print("Train indices: ", trainInd)
     
     trainer = Trainer(args, loader, _model, _loss, trainInd, testInd)
     # beginning with running the training

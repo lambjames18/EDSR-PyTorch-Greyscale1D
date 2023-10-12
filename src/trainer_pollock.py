@@ -10,6 +10,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold
+from data import common
+
+import random
 
 # steps: 
 # fix loader reading 
@@ -19,6 +22,7 @@ from sklearn.model_selection import KFold
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss, trainInd, testInd):
         self.args = args
+        self.scale = args.scale
         self.loss = my_loss
         self.model = my_model
         self.loaderTot = loader.total_loader
@@ -26,6 +30,7 @@ class Trainer():
         self.testInd = testInd
         self.optimizer = utility.make_optimizer(self.args, self.model)
         self.checkpoint = utility.checkpoint(self.args)
+        self.idx_scale = 0
     
     # splits the training and testing based off of the indices 
     # runs the training and testing accordingly
@@ -33,22 +38,31 @@ class Trainer():
         train_files = []
         test_files = []
 
-        for batch_ind in self.trainTnd:
-            data_train = self.loaderTot.dataset[batch_ind]
-            train_files.append(data_train)
-
-        for batch_ind in self.testInd: 
-            data_test = self.loaderTot.dataset[batch_ind]
-            test_files.append(data_test)
+        for batch_ind in range(len(self.loaderTot)):
+            if batch_ind in self.trainTnd:
+                self.loaderTot.dataset.set_as_training()
+                (lr,hr) = self.loaderTot.dataset[batch_ind]
+                train_files.append((lr,hr))
+            elif batch_ind in self.testInd:
+                (lr,hr) = self.loaderTot.dataset[batch_ind]
+                test_files.append((lr,hr))
         
         self.trainTot = train_files
         self.testTot = test_files
 
         self.train()
-        # eventually self.test()
-    
 
     def train(self):
+        # loop over 10 epochs
+
+        # taking the first ten percent of the training images as validation 
+        # after validating in the validation function, shuffles and takes another 
+        validate_ind = (len(self.trainTot)) // 10
+        random.shuffle(self.trainTot)
+
+        validation_data = self.trainTot[:validate_ind]
+        train_data = self.trainTot[validate_ind:]
+
         self.loss.step()
 
         # logs current epoch number and learning rate from optimizer
@@ -73,12 +87,11 @@ class Trainer():
         loss_list = []
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-        self.loaderTot.dataset.set_as_training()
-        for batch_idx, (lr, hr) in enumerate(self.trainTot):
+        for batch_idx, (lr, hr) in enumerate(train_data):
             print("Lr shape: ", lr.shape)
             print("Hr shape: ", hr.shape)
             print("Epoch num: ", epoch)
-            
+
             #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
             #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
 
@@ -106,6 +119,7 @@ class Trainer():
             print("Optimizer zero_grad acheived")
 
             # forward pass with low res input and scale factor of zero
+            # currently too large for the GPU to handle, potentially convert to binary
             sr = self.model(lr, 0)
             loss = self.loss(sr, hr)
             loss.backward()
@@ -152,3 +166,15 @@ class Trainer():
         self.loss.end_log(len(self.loaderTrain))
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
+
+        self.validate_train(validation_data)
+
+    # validation in the training
+    def validate_train(self, validate_data):
+        # complete validation on the 10%
+
+        # shuffle the validation and rest of the training
+
+        # train at the end of the validation
+        self.train()
+    # test
