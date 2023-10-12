@@ -88,6 +88,8 @@ class Trainer():
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
         for batch_idx, (lr, hr) in enumerate(train_data):
+            lr = torch.unsqueeze(lr,0)
+            hr = torch.unsqueeze(hr,0)
             print("Lr shape: ", lr.shape)
             print("Hr shape: ", hr.shape)
             print("Epoch num: ", epoch)
