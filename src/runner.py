@@ -55,6 +55,7 @@ else:
     _loss = loss.Loss(args, checkpoint)'''
 
 _loss = loss.Loss(args, checkpoint)
+epoch_limit = 2
 
 # creating the training object
 # kfold here, before running train class 
@@ -76,7 +77,7 @@ for fold, (trainInd, testInd) in enumerate(kf.split(X)):
     print("Test indices: ", testInd)
     print("Train indices: ", trainInd)
     
-    trainer = Trainer(args, loader, _model, _loss, trainInd, testInd)
+    trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit)
     # beginning with running the training
     trainer.run()
 

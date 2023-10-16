@@ -8,6 +8,7 @@ import torch
 # assuming low res patch size 
 # will scale upward for high res
 def get_patch(*args, patch_size=96, scale=2):
+    # consider decreasing the patch size, not too much, test with different patch sizes, end result
     ih, iw = args[0].shape[-2:]
 
     # for testing 

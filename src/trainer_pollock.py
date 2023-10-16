@@ -20,7 +20,7 @@ import random
 # for loops for 10 epochs
 # separate into validation and train, assuming its already in the test and train
 class Trainer():
-    def __init__(self, args, loader, my_model, my_loss, trainInd, testInd):
+    def __init__(self, args, loader, my_model, my_loss, trainInd, testInd, epoch_limit):
         self.args = args
         self.scale = args.scale
         self.loss = my_loss
@@ -31,6 +31,7 @@ class Trainer():
         self.optimizer = utility.make_optimizer(self.args, self.model)
         self.checkpoint = utility.checkpoint(self.args)
         self.idx_scale = 0
+        self.epoch_limit = epoch_limit
     
     # splits the training and testing based off of the indices 
     # runs the training and testing accordingly
@@ -53,7 +54,14 @@ class Trainer():
         self.train()
 
     def train(self):
-        # loop over 10 epochs
+        # loop over 2 epochs
+        epoch = self.optimizer.get_last_epoch() + 1
+
+        # runs the test when the epoch has run as many times as needed 
+        if(epoch > self.epoch_limit): 
+            print("Made to the testing")
+            exit()
+            self.test()
 
         # taking the first ten percent of the training images as validation 
         # after validating in the validation function, shuffles and takes another 
@@ -64,9 +72,6 @@ class Trainer():
         train_data = self.trainTot[validate_ind:]
 
         self.loss.step()
-
-        # logs current epoch number and learning rate from optimizer
-        epoch = self.optimizer.get_last_epoch() + 1
 
         # getting the learning rate 
         lr_rate = self.optimizer.get_lr()
@@ -86,6 +91,7 @@ class Trainer():
         # self.loaderTot.testset.set_scale(0)
         loss_list = []
 
+
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
         for batch_idx, (lr, hr) in enumerate(train_data):
             lr = torch.unsqueeze(lr,0)
@@ -94,25 +100,11 @@ class Trainer():
             print("Hr shape: ", hr.shape)
             print("Epoch num: ", epoch)
 
-            #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
-            #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
-
-            # defining the device without the parallel processing in the given function
-            if self.args.cpu:
-                device = torch.device('cpu')
-            else:
-                print("CUDA Available: ", torch.cuda.is_available())
-                if torch.backends.mps.is_available():
-                    device = torch.device('mps')
-                elif torch.cuda.is_available():
-                    device = torch.device('cuda')
-                else:
-                    device = torch.device('cpu')
-
+            lr, hr = self.prepare(lr,hr)
 
             # processed with the determined device, in this case cpu 
-            lr = lr.to(device)
-            hr = hr.to(device)
+            #lr = lr.to(device)
+            #hr = hr.to(device)
 
             timer_data.hold()
             timer_model.tic()
@@ -158,7 +150,6 @@ class Trainer():
                 plt.savefig(os.path.join(apath, 'loss_1.pdf'))
                 plt.close(fig)
 
-
                 exit()
 
         print("Train status ", batch_idx + 1, " logged")
@@ -174,9 +165,62 @@ class Trainer():
     # validation in the training
     def validate_train(self, validate_data):
         # complete validation on the 10%
+        self.loss.start_log()
+        print("Validation Loss Log started")
+
+        # the weights wont be updated 
+        self.model.eval()
+
+        timer_data, timer_model = utility.timer(), utility.timer()
+
+        # looping through the validation 
+        for batch_idx, (lr,hr) in enumerate(validate_data):
+            lr = torch.unsqueeze(lr,0)
+            hr = torch.unsqueeze(hr,0)
+
+            lr, hr = self.prepare(lr,hr)
+
+            with torch.no_grad():
+                timer_data.hold()
+                timer_model.tic()
+
+                sr = self.model(lr, 0)
+                loss = self.loss(sr, hr)
+
+                # logging the validation
+                self.checkpoint.write_log('Validation: [{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+                    (batch_idx+1),
+                    len(validate_data),
+                    self.loss.display_loss(batch_idx),
+                    timer_model.release(),
+                    timer_data.release()
+                ))
+
+        self.loss.end_log(len(validate_data))  # End loss logging for validation
+        self.model.train()  # Set the model back to training mode
+        self.optimizer.schedule()
 
         # shuffle the validation and rest of the training
 
         # train at the end of the validation
         self.train()
+
+    def prepare(self, lr, hr):
+         # defining the device without the parallel processing in the given function
+        if self.args.cpu:
+            device = torch.device('cpu')
+        else:
+            print("CUDA Available: ", torch.cuda.is_available())
+            if torch.backends.mps.is_available():
+                device = torch.device('mps')
+            elif torch.cuda.is_available():
+                device = torch.device('cuda')
+            else:
+                device = torch.device('cpu')
+        
+        lr = lr.to(device)
+        hr = hr.to(device)
+
+        return lr, hr 
+
     # test

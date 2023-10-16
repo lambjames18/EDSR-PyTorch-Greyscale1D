@@ -67,13 +67,12 @@ class SRData(data.Dataset):
                 imgs.append(io.imread(os.path.join(self.raw, file)))
 
         # fill the high res and low res
-        # count_train = 0
         for i in range(len(imgs)):
             img = imgs[i]
             img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
             for j in range(4):
                 img_temp = img_split[j]
-                img_temp_down = transform.downscale_local_mean(img_temp, (4,1))
+                img_temp_down = transform.downscale_local_mean(img_temp, (6,1))
                 img_temp_down = (255 * img_temp_down/img_temp_down.max()).astype('uint8')
                 hr_list.append(img_temp)
                 lr_list.append(img_temp_down)
@@ -107,23 +106,6 @@ class SRData(data.Dataset):
         # f_lr = self.images_lr[self.idx_scale][idx]
         
         f_lr = self.images_lr[idx]
-
-        # filename, _ = os.path.splitext(os.path.basename(f_hr))
-        # if self.args.ext == 'img' or self.benchmark:
-
-
-        # hr = imageio.imread(f_hr)
-        #f_hr = f_hr.reshape(f_hr.shape[0], f_hr.shape[1], 1)
-        # lr = imageio.imread(f_lr)
-        #f_lr = f_lr.reshape(f_lr.shape[0], f_lr.shape[1], 1)
-
-
-        '''elif self.args.ext.find('sep') >= 0:
-            with open(f_hr, 'rb') as _f:
-                hr = pickle.load(_f)
-            # print("Filename to be loaded: ", f_lr)
-            with open(f_lr, 'rb') as _f:
-                lr = pickle.load(_f)'''
         
         # this is the image
         return f_lr, f_hr
