@@ -13,6 +13,7 @@ from sklearn.model_selection import KFold
 from data import common
 
 import random
+from tqdm import tqdm
 
 # steps: 
 # fix loader reading 
@@ -93,12 +94,14 @@ class Trainer():
 
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-        for batch_idx, (lr, hr) in enumerate(train_data):
+        pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        for batch_idx, (lr, hr) in enumerate(pbar):
+        # for batch_idx, (lr, hr) in enumerate(train_data):
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
-            print("Lr shape: ", lr.shape)
-            print("Hr shape: ", hr.shape)
-            print("Epoch num: ", epoch)
+            #print("Lr shape: ", lr.shape)
+            #print("Hr shape: ", hr.shape)
+            #print("Epoch num: ", epoch)
 
             lr, hr = self.prepare(lr,hr)
 
@@ -110,7 +113,7 @@ class Trainer():
             timer_model.tic()
 
             self.optimizer.zero_grad()
-            print("Optimizer zero_grad acheived")
+            #print("Optimizer zero_grad acheived")
 
             # forward pass with low res input and scale factor of zero
             # currently too large for the GPU to handle, potentially convert to binary
@@ -129,37 +132,38 @@ class Trainer():
             timer_model.release(),
             timer_data.release()))
 
-            loss_list.append(self.loss.get_loss())
-            # the path to where to save the loss function
-            apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
-            # self.loss.plot_loss(apath, batch_idx + 1)
-            # print("Made to plot")
+            # loss_list.append(self.loss.get_loss())
+            pbar.set_postfix({"Loss": self.loss.get_last_loss()})
+       
 
-            if(batch_idx == 20):
-                print(self.loss.get_loss())
-                x_values = np.arange(1, batch_idx + 2)
-                y_values = self.loss.get_loss()
-                print("Y_values: ", y_values)
+        ### Save the loss function
+        # the path to where to save the loss function
+        apath = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"
+        # self.loss.plot_loss(apath, batch_idx + 1)
+        # print("Made to plot")
+        #print(self.loss.get_loss())
+        x_values = np.arange(1, batch_idx + 2)
+        y_values = self.loss.get_loss()
+        #print("Y_values: ", y_values)
+        # makeshift loss function save
+        fig = plt.figure()
+        plt.title(f"Loss Function epoch {epoch}")
+        plt.plot(x_values, y_values, marker = 'o')
+        plt.xlabel('Batches')
+        plt.ylabel('Loss')
+        plt.grid(True)
+        plt.savefig(os.path.join(apath, f'loss_{epoch}.pdf'))
+        plt.close(fig)
 
-                # makeshift loss function save
-                fig = plt.figure()
-                plt.title("Loss Function epoch 1")
-                plt.plot(x_values, y_values, marker = 'o')
-                plt.xlabel('Batches')
-                plt.ylabel('Loss')
-                plt.grid(True)
-                plt.savefig(os.path.join(apath, 'loss_1.pdf'))
-                plt.close(fig)
 
-                exit()
-
-        print("Train status ", batch_idx + 1, " logged")
+        #print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
 
 
         self.loss.end_log(len(train_data))
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
+        exit()
 
         self.validate_train(validation_data)
 
@@ -211,7 +215,7 @@ class Trainer():
         if self.args.cpu:
             device = torch.device('cpu')
         else:
-            print("CUDA Available: ", torch.cuda.is_available())
+            #print("CUDA Available: ", torch.cuda.is_available())
             if torch.backends.mps.is_available():
                 device = torch.device('mps')
             elif torch.cuda.is_available():

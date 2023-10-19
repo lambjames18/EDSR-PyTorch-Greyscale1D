@@ -67,8 +67,8 @@ class Loss(nn.modules.loss._Loss):
         loss_sum = sum(losses)
         if len(self.loss) > 1:
             self.log[-1, -1] += loss_sum.item()
-        print("Losses: ", losses)
-        print("Loss sum: ", loss_sum)
+        #print("Losses: ", losses)
+        #print("Loss sum: ", loss_sum)
 
         return loss_sum
 
@@ -86,12 +86,15 @@ class Loss(nn.modules.loss._Loss):
     def get_loss(self):
         return self.loss_list
 
+    def get_last_loss(self):
+        return self.loss_list[-1]
+
     def display_loss(self, batch):
         n_samples = batch + 1
         log = []
     
         for l, c in zip(self.loss, self.log[-1]):
-            print(" c / n_samples: ",  c / n_samples)
+            #print(" c / n_samples: ",  c / n_samples)
             self.loss_list.append((c / n_samples).numpy())
             log.append('[{}: {:.4f}]'.format(l['type'], c / n_samples))
 
