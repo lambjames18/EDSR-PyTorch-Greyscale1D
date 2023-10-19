@@ -135,20 +135,23 @@ class Trainer():
             # self.loss.plot_loss(apath, batch_idx + 1)
             # print("Made to plot")
 
-        print(self.loss.get_loss())
-        x_values = np.arange(1, batch_idx + 2)
-        y_values = self.loss.get_loss()
+            if(batch_idx == 20):
+                print(self.loss.get_loss())
+                x_values = np.arange(1, batch_idx + 2)
+                y_values = self.loss.get_loss()
 
-        # makeshift loss function save
-        fig = plt.figure()
-        plt.title("Loss Function epoch 1")
-        plt.plot(x_values, y_values, marker = 'o')
-        plt.xlabel('Batches')
-        plt.ylabel('Loss')
-        plt.grid(True)
-        plt.savefig(os.path.join(apath, 'loss_1.pdf'))
-        plt.close(fig)
-        
+                # makeshift loss function save
+                fig = plt.figure()
+                plt.title("Loss Function epoch 1")
+                plt.plot(x_values, y_values, marker = 'o')
+                plt.xlabel('Batches')
+                plt.ylabel('Loss')
+                plt.grid(True)
+                plt.savefig(os.path.join(apath, 'loss_1.pdf'))
+                plt.close(fig)
+
+                exit()
+
         print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
 
