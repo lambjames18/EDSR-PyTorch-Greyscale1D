@@ -135,7 +135,7 @@ class Trainer():
             # self.loss.plot_loss(apath, batch_idx + 1)
             # print("Made to plot")
 
-            if(batch_idx == 20):
+            '''if(batch_idx == 20):
                 print(self.loss.get_loss())
                 x_values = np.arange(1, batch_idx + 2)
                 y_values = self.loss.get_loss()
@@ -150,7 +150,7 @@ class Trainer():
                 plt.savefig(os.path.join(apath, 'loss_1.pdf'))
                 plt.close(fig)
 
-                exit()
+                exit()'''
 
         print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
