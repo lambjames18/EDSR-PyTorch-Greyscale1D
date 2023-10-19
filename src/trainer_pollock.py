@@ -139,6 +139,7 @@ class Trainer():
                 print(self.loss.get_loss())
                 x_values = np.arange(1, batch_idx + 2)
                 y_values = self.loss.get_loss()
+                print("Y_values: ", y_values)
 
                 # makeshift loss function save
                 fig = plt.figure()
