@@ -124,7 +124,7 @@ class Trainer():
             # logging every training status currently
             self.checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
             (batch_idx + 1) * self.args.batch_size,
-            len(self.loaderTrain.dataset),
+            len(train_data),
             self.loss.display_loss(batch_idx),
             timer_model.release(),
             timer_data.release()))
@@ -156,7 +156,7 @@ class Trainer():
         timer_data.tic()
 
 
-        self.loss.end_log(len(self.loaderTrain))
+        self.loss.end_log(len(train_data))
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
 
