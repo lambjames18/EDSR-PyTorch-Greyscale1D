@@ -4,6 +4,10 @@ import random
 import pickle
 
 from data import common
+
+import numpy as np
+import imageio
+import torch
 import torch.utils.data as data
 from skimage import io, transform
 
@@ -18,13 +22,13 @@ class SRData(data.Dataset):
         self.input_large = (args.model == 'VDSR')
         self.scale = args.scale
         self.idx_scale = 0
-
-        self.apath = os.path.abspath(args.dir_data)
-        self.ext = ('.tiff', '.tiff')
+        
+    
+        self._set_filesystem(args.dir_data)
         
         self.images_hr, self.images_lr = self.fill_HR_LR()
 
-    # run when defining training batch
+        
     def set_as_training(self):
         self.train = True
         n_patches = self.args.batch_size * self.args.test_every
@@ -33,10 +37,27 @@ class SRData(data.Dataset):
             self.repeat = 0
         else:
             self.repeat = max(n_patches // n_images, 1)
-        
 
-    # fills hr_list, lr_list
+    def _scan(self):
+        names_hr = sorted(
+            glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))
+        )
+        
+        names_lr = sorted(
+            glob.glob(os.path.join(self.dir_lr, '*' + self.ext[1]))
+        )
+        
+        return names_hr, names_lr
+
+    def _set_filesystem(self, dir_data):
+        self.apath = os.path.abspath(dir_data)
+        # self.raw = os.path.join(self.apath, 'raw_2')
+        self.ext = ('.tiff', '.tiff')
+
+    # fills the high res and low res folders from the raw
+    # save to the high res and low res, dont save
     def fill_HR_LR(self):
+        # list of images 
         imgs = []
         hr_list = []
         lr_list = []
@@ -46,6 +67,7 @@ class SRData(data.Dataset):
             if file.endswith('.tif'):
                 imgs.append(io.imread(os.path.join(self.apath, file)))
 
+        # fill the high res and low res
         for i in range(len(imgs)):
             img = imgs[i]
             img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
@@ -56,16 +78,15 @@ class SRData(data.Dataset):
                 hr_list.append(img_temp)
                 lr_list.append(img_temp_down)
         return hr_list, lr_list
-    
-    def __getitem__(self, idx):
-        idx = self._get_index(idx)
-        lr = self.images_hr[idx]
-        hr = self.images_lr[idx]
 
+    def __getitem__(self, idx):
+        lr, hr = self._load_file(idx)
+        # print("Lr for patch: ", lr)
+        # print("Hr for patch: ", hr)
         pair = self.get_patch(lr, hr)
+        # print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
-
         return pair_t[0], pair_t[1]
 
     def __len__(self):
@@ -80,6 +101,16 @@ class SRData(data.Dataset):
         else:
             return idx
 
+    def _load_file(self, idx):
+        idx = self._get_index(idx)
+        f_hr = self.images_hr[idx]
+        # f_lr = self.images_lr[self.idx_scale][idx]
+        
+        f_lr = self.images_lr[idx]
+        
+        # this is the image
+        return f_lr, f_hr
+
     def get_patch(self, lr, hr):
         scale = self.scale[self.idx_scale]
 
@@ -93,6 +124,8 @@ class SRData(data.Dataset):
                 patch_size=self.args.patch_size,
                 scale=scale
             )
+            #if not self.args.no_augment: 
+            #    lr, hr = common.augment(lr, hr)
         else:
             ih, iw = lr.shape[:2]
             hr = hr[0:ih * scale, 0:iw * scale]
@@ -105,4 +138,3 @@ class SRData(data.Dataset):
             self.idx_scale = idx_scale
         else:
             self.idx_scale = random.randint(0, len(self.scale) - 1)
-
