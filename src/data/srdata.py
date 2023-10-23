@@ -22,9 +22,8 @@ class SRData(data.Dataset):
         self.input_large = (args.model == 'VDSR')
         self.scale = args.scale
         self.idx_scale = 0
-        
-    
-        self._set_filesystem(args.dir_data)
+        self.apath = os.path.abspath(args.dir_data)
+        self.ext = ('.tiff', '.tiff')
         
         self.images_hr, self.images_lr = self.fill_HR_LR()
 
@@ -37,22 +36,6 @@ class SRData(data.Dataset):
             self.repeat = 0
         else:
             self.repeat = max(n_patches // n_images, 1)
-
-    def _scan(self):
-        names_hr = sorted(
-            glob.glob(os.path.join(self.dir_hr, '*' + self.ext[0]))
-        )
-        
-        names_lr = sorted(
-            glob.glob(os.path.join(self.dir_lr, '*' + self.ext[1]))
-        )
-        
-        return names_hr, names_lr
-
-    def _set_filesystem(self, dir_data):
-        self.apath = os.path.abspath(dir_data)
-        # self.raw = os.path.join(self.apath, 'raw_2')
-        self.ext = ('.tiff', '.tiff')
 
     # fills the high res and low res folders from the raw
     # save to the high res and low res, dont save
@@ -80,11 +63,11 @@ class SRData(data.Dataset):
         return hr_list, lr_list
 
     def __getitem__(self, idx):
-        lr, hr = self._load_file(idx)
-        # print("Lr for patch: ", lr)
-        # print("Hr for patch: ", hr)
+        idx = self._get_index(idx)
+        hr = self.images_hr[idx]
+        lr = self.images_lr[idx]
+
         pair = self.get_patch(lr, hr)
-        # print("Shape of Pair[0]: ", pair[0].shape, "Length of Pair[1]: ", pair[1].shape)
         pair = common.set_channel(*pair, n_channels=self.args.n_colors)
         pair_t = common.np2Tensor(*pair, rgb_range=self.args.rgb_range)
         return pair_t[0], pair_t[1]
@@ -100,16 +83,6 @@ class SRData(data.Dataset):
             return idx % len(self.images_hr)
         else:
             return idx
-
-    def _load_file(self, idx):
-        idx = self._get_index(idx)
-        f_hr = self.images_hr[idx]
-        # f_lr = self.images_lr[self.idx_scale][idx]
-        
-        f_lr = self.images_lr[idx]
-        
-        # this is the image
-        return f_lr, f_hr
 
     def get_patch(self, lr, hr):
         scale = self.scale[self.idx_scale]
