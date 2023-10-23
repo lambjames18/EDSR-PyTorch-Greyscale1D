@@ -51,7 +51,7 @@ class SRData(data.Dataset):
 
     def _set_filesystem(self, dir_data):
         self.apath = os.path.abspath(dir_data)
-        self.raw = os.path.join(self.apath, 'raw_2')
+        # self.raw = os.path.join(self.apath, 'raw_2')
         self.ext = ('.tiff', '.tiff')
 
     # fills the high res and low res folders from the raw
@@ -62,9 +62,10 @@ class SRData(data.Dataset):
         hr_list = []
         lr_list = []
 
-        for file in os.listdir(self.raw):
+        print(self.apath)
+        for file in os.listdir(self.apath):
             if file.endswith('.tif'):
-                imgs.append(io.imread(os.path.join(self.raw, file)))
+                imgs.append(io.imread(os.path.join(self.apath, file)))
 
         # fill the high res and low res
         for i in range(len(imgs)):
