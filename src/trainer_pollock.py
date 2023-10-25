@@ -136,7 +136,7 @@ class Trainer():
             pbar.set_postfix({"Loss": self.loss.get_last_loss()})
        
 
-        ### Save the loss function
+        '''### Save the loss function
         # the path to where to save the loss function
         apath = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"
         # self.loss.plot_loss(apath, batch_idx + 1)
@@ -153,17 +153,16 @@ class Trainer():
         plt.ylabel('Loss')
         plt.grid(True)
         plt.savefig(os.path.join(apath, f'loss_{epoch}.pdf'))
-        plt.close(fig)
+        plt.close(fig)'''
 
 
         #print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
-
+        self.trainLoss = self.loss.get_loss()
 
         self.loss.end_log(len(train_data))
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
-        exit()
 
         self.validate_train(validation_data)
 
@@ -205,7 +204,46 @@ class Trainer():
         self.model.train()  # Set the model back to training mode
         self.optimizer.schedule()
 
-        # shuffle the validation and rest of the training
+        # for plotting the loss with the validation
+
+        # printing both the validation and the training loss
+        '''### Save the loss function
+        # the path to where to save the loss function
+        apath = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"
+        # self.loss.plot_loss(apath, batch_idx + 1)
+        # print("Made to plot")
+        #print(self.loss.get_loss())
+        x_values = np.arange(1, batch_idx + 2)
+        y_values = self.loss.get_loss()
+        #print("Y_values: ", y_values)
+        # makeshift loss function save
+        fig = plt.figure()
+        plt.title(f"Loss Function epoch {epoch}")
+        plt.plot(x_values, y_values, marker = 'o')
+        plt.xlabel('Batches')
+        plt.ylabel('Loss')
+        plt.grid(True)
+        plt.savefig(os.path.join(apath, f'loss_{epoch}.pdf'))
+        plt.close(fig)'''
+
+        # saves the validation loss and training loss for epoch graph
+        x_values = np.arange(1, len(self.trainTot))
+        validateLoss = self.loss.get_loss()
+        trainLoss = self.trainLoss
+
+        fig = plt.figure()
+        plt.plot(x_values, trainLoss, marker = 'o')
+        plt.plot(x_values, validateLoss, marker = 'o')
+        plt.title(f"Loss Function epoch 1")
+        plt.xlabel('Batches')
+        plt.ylabel('Loss')
+        plt.grid(True)
+        plt.savefig(os.path.join(self.args.loss_path, f'loss_{1}.pdf'))
+        plt.close(fig)
+
+
+        # saves the average validation loss as the point for this epoch
+
 
         # train at the end of the validation
         self.train()
