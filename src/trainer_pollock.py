@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold
 from data import common
+import numpy as np
 
 import random
 from tqdm import tqdm
@@ -33,6 +34,7 @@ class Trainer():
         self.checkpoint = utility.checkpoint(self.args)
         self.idx_scale = 0
         self.epoch_limit = epoch_limit
+        self.epoch_averages = []
     
     # splits the training and testing based off of the indices 
     # runs the training and testing accordingly
@@ -61,6 +63,15 @@ class Trainer():
         # runs the test when the epoch has run as many times as needed 
         if(epoch > self.epoch_limit): 
             print("Made to the testing")
+            # save the graph of the total epochs 
+            fig = plt.figure()
+            plt.title(f"Loss Function Total")
+            plt.plot(epoch, self.epoch_averages, marker = 'o')
+            plt.xlabel('Epochs')
+            plt.ylabel('Loss')
+            plt.grid(True)
+            plt.savefig(os.path.join(self.args.loss_path, f'totalLoss.pdf'))
+            plt.close(fig)
             exit()
             self.test()
 
@@ -89,10 +100,6 @@ class Trainer():
         timer_data, timer_model = utility.timer(), utility.timer()
         print("Timer set")
 
-        # setting scale
-        # self.loaderTot.testset.set_scale(0)
-        loss_list = []
-
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
         pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
@@ -100,16 +107,8 @@ class Trainer():
         # for batch_idx, (lr, hr) in enumerate(train_data):
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
-            #print("Lr shape: ", lr.shape)
-            #print("Hr shape: ", hr.shape)
-            #print("Epoch num: ", epoch)
 
             lr, hr = self.prepare(lr,hr)
-
-            # processed with the determined device, in this case cpu 
-            #lr = lr.to(device)
-            #hr = hr.to(device)
-
             timer_data.hold()
             timer_model.tic()
 
@@ -136,27 +135,6 @@ class Trainer():
             # loss_list.append(self.loss.get_loss())
             pbar.set_postfix({"Loss": self.loss.get_last_loss()})
             self.trainLoss.append(self.loss.get_last_loss())
-       
-
-        '''### Save the loss function
-        # the path to where to save the loss function
-        apath = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"
-        # self.loss.plot_loss(apath, batch_idx + 1)
-        # print("Made to plot")
-        #print(self.loss.get_loss())
-        x_values = np.arange(1, batch_idx + 2)
-        y_values = self.loss.get_loss()
-        #print("Y_values: ", y_values)
-        # makeshift loss function save
-        fig = plt.figure()
-        plt.title(f"Loss Function epoch {epoch}")
-        plt.plot(x_values, y_values, marker = 'o')
-        plt.xlabel('Batches')
-        plt.ylabel('Loss')
-        plt.grid(True)
-        plt.savefig(os.path.join(apath, f'loss_{epoch}.pdf'))
-        plt.close(fig)'''
-
 
         #print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
@@ -164,11 +142,12 @@ class Trainer():
         self.loss.end_log(len(train_data))
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
-
-        self.validate_train(validation_data, len(train_data))
+        # will be one point on the graph of total
+        self.epoch_averages.append(np.average(self.trainLoss))
+        self.validate_train(validation_data, len(train_data), epoch)
 
     # validation in the training
-    def validate_train(self, validate_data, trainlength):
+    def validate_train(self, validate_data, trainlength, epoch):
         # complete validation on the 10%
         self.loss.start_log()
         print("Validation Loss Log started")
@@ -202,7 +181,6 @@ class Trainer():
                     timer_data.release()
                 ))
                 self.validateLoss.append(self.loss.get_last_loss())
-                print("Check if train is changing: ", self.trainLoss[-1:])
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
         self.model.train()  # Set the model back to training mode
@@ -238,6 +216,7 @@ class Trainer():
         y_validateLoss = self.validateLoss
 
 
+        # Plot for one epoch
         fig = plt.figure()
         plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
         plt.plot(x_validationLoss, y_validateLoss, marker = 'o', color = 'blue')
@@ -245,9 +224,8 @@ class Trainer():
         plt.xlabel('Batches')
         plt.ylabel('Loss')
         plt.grid(True)
-        plt.savefig(os.path.join(self.args.loss_path, f'loss_{1}.pdf'))
+        plt.savefig(os.path.join(self.args.loss_path, f'loss_{epoch}.pdf'))
         plt.close(fig)
-
 
         # saves the average validation loss as the point for this epoch
 

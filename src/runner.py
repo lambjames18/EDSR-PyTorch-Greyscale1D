@@ -56,7 +56,7 @@ else:
     _loss = loss.Loss(args, checkpoint)'''
 
 _loss = loss.Loss(args, checkpoint)
-epoch_limit = 2
+epoch_limit = 5
 
 # creating the training object
 # kfold here, before running train class 
