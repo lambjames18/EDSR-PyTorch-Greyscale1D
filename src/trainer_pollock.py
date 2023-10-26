@@ -79,6 +79,7 @@ class Trainer():
 
         # initialization of loss log
         self.loss.start_log()
+        self.trainLoss = []
         print("Loss Log started")
                 
         # set model to train where there is possibility of test
@@ -134,6 +135,7 @@ class Trainer():
 
             # loss_list.append(self.loss.get_loss())
             pbar.set_postfix({"Loss": self.loss.get_last_loss()})
+            self.trainLoss.append(self.loss.get_last_loss())
        
 
         '''### Save the loss function
@@ -158,19 +160,19 @@ class Trainer():
 
         #print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
-        self.trainLoss = self.loss.get_loss()
 
         self.loss.end_log(len(train_data))
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
 
-        self.validate_train(validation_data)
+        self.validate_train(validation_data, len(train_data))
 
     # validation in the training
-    def validate_train(self, validate_data):
+    def validate_train(self, validate_data, trainlength):
         # complete validation on the 10%
         self.loss.start_log()
         print("Validation Loss Log started")
+        self.validateLoss = []
 
         # the weights wont be updated 
         self.model.eval()
@@ -199,6 +201,8 @@ class Trainer():
                     timer_model.release(),
                     timer_data.release()
                 ))
+                self.validateLoss.append(self.loss.get_last_loss())
+                print("Check if train is changing: ", self.trainLoss[-1:])
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
         self.model.train()  # Set the model back to training mode
@@ -227,13 +231,16 @@ class Trainer():
         plt.close(fig)'''
 
         # saves the validation loss and training loss for epoch graph
-        x_values = np.arange(1, len(self.trainTot))
-        validateLoss = self.loss.get_loss()
-        trainLoss = self.trainLoss
+        x_trainLoss = np.arange(0, trainlength)
+        y_trainLoss = self.trainLoss
+
+        x_validationLoss = np.arange(trainlength, trainlength + len(validate_data))
+        y_validateLoss = self.validateLoss
+
 
         fig = plt.figure()
-        plt.plot(x_values, trainLoss, marker = 'o')
-        plt.plot(x_values, validateLoss, marker = 'o')
+        plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
+        plt.plot(x_validationLoss, y_validateLoss, marker = 'o', color = 'blue')
         plt.title(f"Loss Function epoch 1")
         plt.xlabel('Batches')
         plt.ylabel('Loss')
