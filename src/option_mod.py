@@ -43,6 +43,8 @@ parser.add_argument('--no_augment', action='store_true',
                     help='do not use data augmentation')
 parser.add_argument('--n_axis', type=int, default=1,
                     help='number of axis to upsample (1 or 2)')
+parser.add_argument('--imageLim', type=int, default=0,
+                    help='limit for reading in the images')
 
 # Model specifications
 parser.add_argument('--model', default='EDSR',

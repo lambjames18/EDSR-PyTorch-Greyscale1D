@@ -32,7 +32,7 @@ class Loss(nn.modules.loss._Loss):
                 'weight': float(weight),
                 'function': loss_function}
             )
-
+            
         if len(self.loss) > 1:
             self.loss.append({'type': 'Total', 'weight': 0, 'function': None})
 

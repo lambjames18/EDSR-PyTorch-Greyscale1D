@@ -49,6 +49,8 @@ class SRData(data.Dataset):
         for file in os.listdir(self.apath):
             if file.endswith('.tif'):
                 imgs.append(io.imread(os.path.join(self.apath, file)))
+            if len(imgs) > self.args.imageLim and self.args.imageLim != 0:
+                break
 
         # fill the high res and low res
         for i in range(len(imgs)):
@@ -97,8 +99,8 @@ class SRData(data.Dataset):
                 patch_size=self.args.patch_size,
                 scale=scale
             )
-            #if not self.args.no_augment: 
-            #    lr, hr = common.augment(lr, hr)
+            if not self.args.no_augment: 
+                lr, hr = common.augment(lr, hr)
         else:
             ih, iw = lr.shape[:2]
             hr = hr[0:ih * scale, 0:iw * scale]

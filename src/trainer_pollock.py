@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from data import common
 import numpy as np
+from decimal import Decimal
 
 import random
 from tqdm import tqdm
@@ -22,7 +23,7 @@ from tqdm import tqdm
 # for loops for 10 epochs
 # separate into validation and train, assuming its already in the test and train
 class Trainer():
-    '''def __init__(self, args, loader, my_model, my_loss, trainInd, testInd, epoch_limit):
+    def __init__(self, args, loader, my_model, my_loss, trainInd, testInd, epoch_limit):
         self.args = args
         self.scale = args.scale
         self.loss = my_loss
@@ -34,7 +35,8 @@ class Trainer():
         self.checkpoint = utility.checkpoint(self.args)
         self.idx_scale = 0
         self.epoch_limit = epoch_limit
-        self.epoch_averages = []
+        self.epoch_averages_validation = []
+        self.epoch_averages_train = []
     
     # splits the training and testing based off of the indices 
     # runs the training and testing accordingly
@@ -65,9 +67,11 @@ class Trainer():
             print("Made to the testing")
             # save the graph of the total epochs 
             fig = plt.figure()
-            plt.title(f"Loss Function Total")
+            plt.title(f"Total epochs")
             epoch_range = np.arange(0,self.epoch_limit)
-            plt.plot(epoch_range, self.epoch_averages, marker = 'o')
+            plt.plot(epoch_range, self.epoch_averages_validation, marker = 'o', color = 'red', label = "Validation")
+            plt.plot(epoch_range, self.epoch_averages_train, marker = 'o', color = 'blue', label = "Training")
+            plt.legend()
             plt.xlabel('Epochs')
             plt.ylabel('Loss')
             plt.grid(True)
@@ -113,10 +117,8 @@ class Trainer():
             timer_model.tic()
 
             self.optimizer.zero_grad()
-            #print("Optimizer zero_grad acheived")
 
             # forward pass with low res input and scale factor of zero
-            # currently too large for the GPU to handle, potentially convert to binary
             sr = self.model(lr, 0)
             loss = self.loss(sr, hr)
             loss.backward()
@@ -132,21 +134,25 @@ class Trainer():
             timer_model.release(),
             timer_data.release()))
 
+            #print("Loss after callin the model: ", self.loss.get_last_loss())
+
             # loss_list.append(self.loss.get_loss())
             pbar.set_postfix({"Loss": self.loss.get_last_loss()})
             self.trainLoss.append(self.loss.get_last_loss())
-        #print("Train status ", batch_idx + 1, " logged")
+            #print("Train status ", batch_idx + 1, " logged")
+        
         timer_data.tic()
-
+        self.epoch_averages_train.append(self.loss.get_last_loss())
         self.loss.end_log(len(train_data))
         error_last = self.loss.log[-1, -1]
-        self.optimizer.schedule()
+        
         # will be one point on the graph of total
-        self.epoch_averages.append(self.loss.get_last_loss())
         self.validate_train(validation_data, len(train_data), epoch)
 
     # validation in the training
     def validate_train(self, validate_data, trainlength, epoch):
+        torch.set_grad_enabled(False)
+
         # complete validation on the 10%
         self.loss.start_log()
         print("Validation Loss Log started")
@@ -182,8 +188,6 @@ class Trainer():
                 self.validateLoss.append(self.loss.get_last_loss())
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
-        self.model.train()  # Set the model back to training mode
-        self.optimizer.schedule()
 
         # for plotting the loss with the validation
 
@@ -196,23 +200,25 @@ class Trainer():
         x_validationLoss = np.arange(trainlength, trainlength + len(validate_data))
         y_validateLoss = self.validateLoss
 
+        # adding the average 
+        self.epoch_averages_validation.append(np.average(self.validateLoss))
 
         # Plot for one epoch
         fig = plt.figure()
         plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
         plt.plot(x_validationLoss, y_validateLoss, marker = 'o', color = 'blue')
-        plt.title(f"Loss Function epoch 1")
+        plt.title(f"Loss Function epoch {epoch}")
         plt.xlabel('Batches')
         plt.ylabel('Loss')
         plt.grid(True)
-        plt.savefig(os.path.join(self.args.loss_path, f'loss_{epoch}.pdf'))
+        plt.savefig(os.path.join(self.args.loss_path, f'Epoch_{epoch}.pdf'))
         plt.close(fig)
-
-        # saves the average validation loss as the point for this epoch
 
 
         # train at the end of the validation
-        print("Epoch after validation: ", self.optimizer.get_last_epoch())
+        torch.set_grad_enabled(True)
+        self.model.train()  # Set the model back to training mode
+        self.optimizer.schedule()
         self.train()
 
     def prepare(self, lr, hr):
@@ -233,22 +239,19 @@ class Trainer():
 
         return lr, hr 
 
-    # test'''
+    # test
 
-    # seeing if the old works 
+    
+    '''# seeing if the old works 
     def __init__(self, args, loader, my_model, my_loss):
         self.args = args
         self.loss = my_loss
         self.model = my_model
-        # includes the total list of hr and low res
         self.loaderTot = loader.total_loader
-        #self.loaderTest = loader.loader_test
         self.optimizer = utility.make_optimizer(self.args, self.model)
         self.checkpoint = utility.checkpoint(self.args)
     
     def train(self):
-        # there are 4 loops for each image
-        self.kFold = 4
         self.loss.step()
 
         # logs current epoch number and learning rate from optimizer
@@ -269,20 +272,13 @@ class Trainer():
         print("Timer set")
 
         # setting scale
-        # self.loaderTot.testset.set_scale(0)
+        self.loaderTot.dataset.set_scale(0)
         loss_list = []
 
-        # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
-
-        # testing the kfold
-        # train_indices, test_indices = KFold(n_splits = self.kFold, shuffle=True, random_state=42).split(self.loaderTot)
-        # print("KFold split", train_indices, test_indices)
         self.loaderTot.dataset.set_as_training()
+        # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
         for batch_idx, (lr, hr) in enumerate(self.loaderTot):
-            print("Lr shape: ", lr.shape)
-            print("Hr shape: ", hr.shape)
             print("Epoch num: ", epoch)
-            
             #print("LR Shape (Batch {}): {}".format(batch_idx, lr.shape))
             #print("HR Shape (Batch {}): {}".format(batch_idx, hr.shape))
 
@@ -327,9 +323,8 @@ class Trainer():
 
             loss_list.append(self.loss.get_loss())
             # the path to where to save the loss function
-            apath = "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data/loss"
-            # self.loss.plot_loss(apath, batch_idx + 1)
-            # print("Made to plot")
+            self.loss.plot_loss(self.args.loss_path, batch_idx + 1)
+            print("Made to plot")
 
             if(batch_idx == 20):
                 print(self.loss.get_loss())
@@ -343,7 +338,7 @@ class Trainer():
                 plt.xlabel('Batches')
                 plt.ylabel('Loss')
                 plt.grid(True)
-                plt.savefig(os.path.join(apath, 'loss_1.pdf'))
+                plt.savefig(os.path.join(self.args.loss_path, 'loss_1.pdf'))
                 plt.close(fig)
 
 
@@ -355,4 +350,4 @@ class Trainer():
 
         self.loss.end_log(len(self.loaderTot))
         error_last = self.loss.log[-1, -1]
-        self.optimizer.schedule()
+        self.optimizer.schedule()'''

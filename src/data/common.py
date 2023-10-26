@@ -68,20 +68,13 @@ def np2Tensor(*args, rgb_range=255):
 
     return [_np2Tensor(a) for a in args]
 
-def augment(*args, hflip=True, rot=True):
-    hflip = hflip and random.random() < 0.5
-    vflip = rot and random.random() < 0.5
-    rot90 = rot and random.random() < 0.5
+def augment(*args):
+    hflip = random.random() < 0.5
+    vflip = random.random() < 0.5
 
     def _augment(img):
         if hflip: img = img[:, ::-1]
         if vflip: img = img[::-1]
-        if rot90: 
-            if img.ndim == 3:
-                img = img.transpose(1, 0, 2)
-            elif img.ndim == 2:
-                # transpose for 2D images 
-                img = img.T
         
         return img
 
