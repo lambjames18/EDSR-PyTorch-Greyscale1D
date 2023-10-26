@@ -58,7 +58,7 @@ class Trainer():
 
     def train(self):
         # loop over 2 epochs
-        epoch = self.optimizer.get_last_epoch() + 1
+        epoch = self.optimizer.get_last_epoch() +1
 
         # runs the test when the epoch has run as many times as needed 
         if(epoch > self.epoch_limit): 
@@ -66,7 +66,8 @@ class Trainer():
             # save the graph of the total epochs 
             fig = plt.figure()
             plt.title(f"Loss Function Total")
-            plt.plot(epoch, self.epoch_averages, marker = 'o')
+            epoch_range = np.arange(0,self.epoch_limit)
+            plt.plot(epoch_range, self.epoch_averages, marker = 'o')
             plt.xlabel('Epochs')
             plt.ylabel('Loss')
             plt.grid(True)
@@ -99,7 +100,6 @@ class Trainer():
 
         timer_data, timer_model = utility.timer(), utility.timer()
         print("Timer set")
-
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
         pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
@@ -135,7 +135,6 @@ class Trainer():
             # loss_list.append(self.loss.get_loss())
             pbar.set_postfix({"Loss": self.loss.get_last_loss()})
             self.trainLoss.append(self.loss.get_last_loss())
-
         #print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
 
@@ -143,7 +142,7 @@ class Trainer():
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
         # will be one point on the graph of total
-        self.epoch_averages.append(np.average(self.trainLoss))
+        self.epoch_averages.append(self.loss.get_last_loss())
         self.validate_train(validation_data, len(train_data), epoch)
 
     # validation in the training
@@ -184,29 +183,8 @@ class Trainer():
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
         self.model.train()  # Set the model back to training mode
-        self.optimizer.schedule()
-
-        # for plotting the loss with the validation
-
-        # printing both the validation and the training loss
-        '''### Save the loss function
-        # the path to where to save the loss function
-        apath = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"
-        # self.loss.plot_loss(apath, batch_idx + 1)
-        # print("Made to plot")
-        #print(self.loss.get_loss())
-        x_values = np.arange(1, batch_idx + 2)
-        y_values = self.loss.get_loss()
-        #print("Y_values: ", y_values)
-        # makeshift loss function save
-        fig = plt.figure()
-        plt.title(f"Loss Function epoch {epoch}")
-        plt.plot(x_values, y_values, marker = 'o')
-        plt.xlabel('Batches')
-        plt.ylabel('Loss')
-        plt.grid(True)
-        plt.savefig(os.path.join(apath, f'loss_{epoch}.pdf'))
-        plt.close(fig)'''
+        # self.epoch_averages.append(self.optimizer.get_last_epoch())
+        # self.optimizer.schedule()
 
         # saves the validation loss and training loss for epoch graph
         x_trainLoss = np.arange(0, trainlength)
@@ -231,6 +209,7 @@ class Trainer():
 
 
         # train at the end of the validation
+        print("Epoch after validation: ", self.optimizer.get_last_epoch())
         self.train()
 
     def prepare(self, lr, hr):
