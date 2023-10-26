@@ -58,6 +58,10 @@ else:
 _loss = loss.Loss(args, checkpoint)
 epoch_limit = 5
 
+# seeing if the old works 
+trainer = Trainer(args, loader, _model, _loss)
+exit()
+
 # creating the training object
 # kfold here, before running train class 
 
