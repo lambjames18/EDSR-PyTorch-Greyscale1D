@@ -56,7 +56,7 @@ else:
     _loss = loss.Loss(args, checkpoint)'''
 
 _loss = loss.Loss(args, checkpoint)
-epoch_limit = 5
+epoch_limit = 10
 
 # seeing if the old works 
 trainer = Trainer(args, loader, _model, _loss)

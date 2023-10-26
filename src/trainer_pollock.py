@@ -58,7 +58,7 @@ class Trainer():
 
     def train(self):
         # loop over 2 epochs
-        epoch = self.optimizer.get_last_epoch() + 1
+        epoch = self.optimizer.get_last_epoch() +1
 
         # runs the test when the epoch has run as many times as needed 
         if(epoch > self.epoch_limit): 
@@ -66,7 +66,8 @@ class Trainer():
             # save the graph of the total epochs 
             fig = plt.figure()
             plt.title(f"Loss Function Total")
-            plt.plot(epoch, self.epoch_averages, marker = 'o')
+            epoch_range = np.arange(0,self.epoch_limit)
+            plt.plot(epoch_range, self.epoch_averages, marker = 'o')
             plt.xlabel('Epochs')
             plt.ylabel('Loss')
             plt.grid(True)
@@ -99,7 +100,6 @@ class Trainer():
 
         timer_data, timer_model = utility.timer(), utility.timer()
         print("Timer set")
-
 
         # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
         pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
@@ -135,7 +135,6 @@ class Trainer():
             # loss_list.append(self.loss.get_loss())
             pbar.set_postfix({"Loss": self.loss.get_last_loss()})
             self.trainLoss.append(self.loss.get_last_loss())
-
         #print("Train status ", batch_idx + 1, " logged")
         timer_data.tic()
 
@@ -143,7 +142,7 @@ class Trainer():
         error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
         # will be one point on the graph of total
-        self.epoch_averages.append(np.average(self.trainLoss))
+        self.epoch_averages.append(self.loss.get_last_loss())
         self.validate_train(validation_data, len(train_data), epoch)
 
     # validation in the training
@@ -213,6 +212,7 @@ class Trainer():
 
 
         # train at the end of the validation
+        print("Epoch after validation: ", self.optimizer.get_last_epoch())
         self.train()
 
     def prepare(self, lr, hr):
