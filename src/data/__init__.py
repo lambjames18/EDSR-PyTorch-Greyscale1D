@@ -67,7 +67,7 @@ class Data:
         
         self.total_loader = dataloader.DataLoader(
             testset,
-            batch_size=1,
+            batch_size=args.batch_size,
             shuffle=False,
             pin_memory=not args.cpu,
             #num_workers=args.n_threads,

@@ -26,7 +26,7 @@ from sklearn.model_selection import KFold
 # args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 # args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 print("Starting")
-args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--loss_path", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"])
+args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results", "--imageLim", "10", "--n_colors", "1", "--n_axis", "1", "--batch_size", "1", "--n_GPUs", "1", "--patch_size", "48", "--loss_path", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"])
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
@@ -53,7 +53,7 @@ _loss = loss.Loss(args, checkpoint)
 
 
 # seeing if the older version works
-epoch_limit = 50
+epoch_limit = 40
 
 # runs a new trainer for each set of indices returned
 splits = 5
