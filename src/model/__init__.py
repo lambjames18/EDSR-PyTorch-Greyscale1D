@@ -65,8 +65,13 @@ class Model(nn.Module):
             else:
                 return forward_function(x)
 
+    # use this to save the model
     def save(self, apath, epoch, is_best=False):
-        save_dirs = [os.path.join(apath, 'model_latest.pt')]
+        # create a folder for the model
+        model_dir = os.path.join(apath, 'model')
+        os.mkdir(model_dir, exist_ok = True)
+        
+        save_dirs = [os.path.join(model_dir, 'model_latest.pt')]
 
         if is_best:
             save_dirs.append(os.path.join(apath, 'model_best.pt'))
@@ -78,6 +83,7 @@ class Model(nn.Module):
         for s in save_dirs:
             torch.save(self.model.state_dict(), s)
 
+    # loads the model when testing on the best model
     def load(self, apath, pre_train='', resume=-1, cpu=False):
         load_from = None
         kwargs = {}
