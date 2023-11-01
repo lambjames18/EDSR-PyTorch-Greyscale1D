@@ -61,10 +61,9 @@ class Trainer():
     def train(self):
         # loop over 2 epochs
         epoch = self.optimizer.get_last_epoch() +1
-
+        print("Epoch limit: ", self.epoch_limit)
         # runs the test when the epoch has run as many times as needed 
         if(epoch > self.epoch_limit): 
-            print("Made to the testing")
             # save the graph of the total epochs 
             fig = plt.figure()
             plt.title(f"Total epochs")
@@ -80,8 +79,10 @@ class Trainer():
 
             # saving the model 
             self.model.save(self.args.dir_data, epoch)
+            print("Model saved")
 
             self.test()
+            print("After testing")
 
         # taking the first ten percent of the training images as validation 
         # after validating in the validation function, shuffles and takes another 
@@ -230,7 +231,7 @@ class Trainer():
         self.model.eval()
 
         epoch = self.optimizer.get_last_epoch()
-        print("Made to the end of the testing")
+        exit()
 
     def prepare(self, lr, hr):
          # defining the device without the parallel processing in the given function

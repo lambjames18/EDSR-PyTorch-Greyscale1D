@@ -53,7 +53,7 @@ _loss = loss.Loss(args, checkpoint)
 
 
 # seeing if the older version works
-epoch_limit = 40
+epoch_limit = 1
 
 # runs a new trainer for each set of indices returned
 splits = 5

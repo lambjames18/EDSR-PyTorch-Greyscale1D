@@ -69,7 +69,7 @@ class Model(nn.Module):
     def save(self, apath, epoch, is_best=False):
         # create a folder for the model
         model_dir = os.path.join(apath, 'model')
-        os.mkdir(model_dir, exist_ok = True)
+        os.makedirs(model_dir, exist_ok=True)
         
         save_dirs = [os.path.join(model_dir, 'model_latest.pt')]
 
