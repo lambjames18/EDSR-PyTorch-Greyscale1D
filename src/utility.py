@@ -133,7 +133,7 @@ class checkpoint():
 
     
 
-    def begin_background(self):
+    '''def begin_background(self):
         self.queue = Queue()
 
         self.process = [
@@ -141,25 +141,25 @@ class checkpoint():
             for _ in range(self.n_processes)
         ]
         
-        for p in self.process: p.start()
+        for p in self.process: p.start()'''
 
     def end_background(self):
         for _ in range(self.n_processes): self.queue.put((None, None))
         while not self.queue.empty(): time.sleep(1)
         for p in self.process: p.join()
 
-    def save_results(self, dataset, filename, save_list, scale):
+    def save_results(self, save_list):
         if self.args.save_results:
-            filename = self.get_path(
+            '''filename = self.get_path(
                 'results-{}'.format(dataset.dataset.name),
                 '{}_x{}_'.format(filename, scale)
-            )
+            )'''
 
             postfix = ('SR', 'LR', 'HR')
             for v, p in zip(save_list, postfix):
                 normalized = v[0].mul(255 / self.args.rgb_range)
                 tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
+                self.queue.put(('{}.tiff'.format(p), tensor_cpu))
 
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range

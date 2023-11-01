@@ -72,7 +72,7 @@ for fold, (trainInd, testInd) in enumerate(kf.split(X)):
     print("Test indices: ", testInd)
     print("Train indices: ", trainInd)
     
-    trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit)
+    trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit, checkpoint)
     # beginning with running the training
     trainer.run()
 

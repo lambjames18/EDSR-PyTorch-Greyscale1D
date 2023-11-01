@@ -23,11 +23,12 @@ from tqdm import tqdm
 # for loops for 10 epochs
 # separate into validation and train, assuming its already in the test and train
 class Trainer():
-    def __init__(self, args, loader, my_model, my_loss, trainInd, testInd, epoch_limit):
+    def __init__(self, args, loader, my_model, my_loss, trainInd, testInd, epoch_limit, checkpoint):
         self.args = args
         self.scale = args.scale
         self.loss = my_loss
         self.model = my_model
+        self.ckp = checkpoint
         self.loaderTot = loader.total_loader
         self.trainTnd = trainInd
         self.testInd = testInd
@@ -82,7 +83,7 @@ class Trainer():
             print("Model saved")
 
             self.test()
-            print("After testing")
+            exit()
 
         # taking the first ten percent of the training images as validation 
         # after validating in the validation function, shuffles and takes another 
@@ -109,7 +110,6 @@ class Trainer():
         timer_data, timer_model = utility.timer(), utility.timer()
         print("Timer set")
 
-        # batch_idx, (lr, hr, _,) = next(enumerate(loaderTrain))
         pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         for batch_idx, (lr, hr) in enumerate(pbar):
         # for batch_idx, (lr, hr) in enumerate(train_data):
@@ -228,10 +228,61 @@ class Trainer():
     # this will both save the model and test on the test images
     def test(self):
         torch.set_grad_enabled(False)
-        self.model.eval()
 
         epoch = self.optimizer.get_last_epoch()
-        exit()
+        self.model.eval()
+
+        timer_test = utility.timer()
+
+        # multiprocessing 
+        #if self.args.save_results: self.ckp.begin_background()
+
+        test_data = self.testTot
+        pbar = tqdm(test_data, total=len(test_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        
+        scale = self.args.scale
+        dataset = self.loaderTot.dataset
+        self.loaderTot.dataset.set_scale(scale)
+        for idx_data, (lr, hr) in enumerate(pbar): 
+            lr = torch.unsqueeze(lr,0)
+            hr = torch.unsqueeze(hr,0)
+
+            lr, hr = self.prepare(lr,hr)
+            sr = self.model(lr, scale)
+            sr = utility.quantize(sr, self.args.rgb_range)
+
+            save_list = [sr]
+            self.ckp.log[-1, idx_data, scale] += utility.calc_psnr(
+                sr, hr, scale, self.args.rgb_range, dataset=dataset
+            )
+            if self.args.save_gt:
+                save_list.extend([lr, hr])
+
+            if self.args.save_results:
+                self.ckp.save_results(save_list)
+        
+        self.ckp.log[-1, idx_data, scale] /= len(dataset)
+        best = self.ckp.log.max(0)
+        self.ckp.write_log(
+            '[{:.3f} (Best: {:.3f} @epoch {})'.format(
+                self.ckp.log[-1, idx_data, scale],
+                best[0][idx_data, scale],
+                best[1][idx_data, scale] + 1
+            )
+        )
+
+        self.ckp.write_log('Saving...')
+
+        #if not self.args.test_only:
+        #    self.ckp.save(self, epoch, is_best=(best[1][0, 0] + 1 == epoch))
+
+        self.ckp.write_log(
+            'Total: {:.2f}s\n'.format(timer_test.toc()), refresh=True
+        )
+
+        torch.set_grad_enabled(True)
+
+        
 
     def prepare(self, lr, hr):
          # defining the device without the parallel processing in the given function
