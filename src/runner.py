@@ -26,7 +26,7 @@ from sklearn.model_selection import KFold
 # args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 # args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 print("Starting")
-args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results", "--imageLim", "10", "--n_colors", "1", "--n_axis", "1", "--batch_size", "1", "--n_GPUs", "1", "--patch_size", "48", "--loss_path", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"])
+args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "1", "--n_GPUs", "1", "--patch_size", "48", "--loss_path", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"])
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
@@ -51,9 +51,8 @@ _model = model.Model(args, checkpoint)
 
 _loss = loss.Loss(args, checkpoint) 
 
-
 # seeing if the older version works
-epoch_limit = 1
+epoch_limit = 500
 
 # runs a new trainer for each set of indices returned
 splits = 5
@@ -75,6 +74,16 @@ for fold, (trainInd, testInd) in enumerate(kf.split(X)):
     trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit, checkpoint)
     # beginning with running the training
     trainer.run()
+    """
+    ### testing the model and getting the output
+    trainer.test() # output one image and get loss values for all testin images
+    loss_values = trainer.test_loss_values
+    print("Average loss: ", np.mean(loss_values), np.std(loss_values))
+    with open("loss.txt", "a") as output_file:
+        output_file.write(f"{fold} {np.mean(loss_values)} {np.std(loss_values)}\n")
+    """
+
+    
 
 # train_indices, test_indices = KFold(n_splits = kFold, shuffle=True, random_state=42).split(loader.total_loader.dataset)
 # print("KFold split", train_indices, test_indices)

@@ -61,97 +61,97 @@ class Trainer():
 
     def train(self):
         # loop over 2 epochs
-        epoch = self.optimizer.get_last_epoch() +1
-        print("Epoch limit: ", self.epoch_limit)
-        # runs the test when the epoch has run as many times as needed 
-        if(epoch > self.epoch_limit): 
-            # save the graph of the total epochs 
-            fig = plt.figure()
-            plt.title(f"Total epochs")
-            epoch_range = np.arange(0,self.epoch_limit)
-            plt.plot(epoch_range, self.epoch_averages_validation, marker = 'o', color = 'red', label = "Validation")
-            plt.plot(epoch_range, self.epoch_averages_train, marker = 'o', color = 'blue', label = "Training")
-            plt.legend()
-            plt.xlabel('Epochs')
-            plt.ylabel('Loss')
-            plt.grid(True)
-            plt.savefig(os.path.join(self.args.loss_path, f'totalLoss.pdf'))
-            plt.close(fig)
+        for epoch in range(1, self.epoch_limit + 1):
+            # epoch = self.optimizer.get_last_epoch() +1
 
-            # saving the model 
-            self.model.save(self.args.dir_data, epoch)
-            print("Model saved")
+            # taking the first ten percent of the training images as validation 
+            # after validating in the validation function, shuffles and takes another 
+            validate_ind = (len(self.trainTot)) // 10
+            random.shuffle(self.trainTot)
 
-            self.test()
-            exit()
+            validation_data = self.trainTot[:validate_ind]
+            train_data = self.trainTot[validate_ind:]
 
-        # taking the first ten percent of the training images as validation 
-        # after validating in the validation function, shuffles and takes another 
-        validate_ind = (len(self.trainTot)) // 10
-        random.shuffle(self.trainTot)
+            self.loss.step()
 
-        validation_data = self.trainTot[:validate_ind]
-        train_data = self.trainTot[validate_ind:]
+            # getting the learning rate 
+            lr_rate = self.optimizer.get_lr()
 
-        self.loss.step()
+            # initialization of loss log
+            self.loss.start_log()
+            self.trainLoss = []
+            print("Loss Log started")
+                    
+            # set model to train where there is possibility of test
+            # train at the end of the validation
+            torch.set_grad_enabled(True)
+            self.model.train()  # Set the model back to training mode
+            self.optimizer.schedule()
+            print("Model to train reached")
 
-        # getting the learning rate 
-        lr_rate = self.optimizer.get_lr()
+            timer_data, timer_model = utility.timer(), utility.timer()
+            print("Timer set")
 
-        # initialization of loss log
-        self.loss.start_log()
-        self.trainLoss = []
-        print("Loss Log started")
-                
-        # set model to train where there is possibility of test
-        self.model.train()
-        print("Model to train reached")
+            pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+            for batch_idx, (lr, hr) in enumerate(pbar):
+            # for batch_idx, (lr, hr) in enumerate(train_data):
+                lr = torch.unsqueeze(lr,0)
+                hr = torch.unsqueeze(hr,0)
 
-        timer_data, timer_model = utility.timer(), utility.timer()
-        print("Timer set")
+                lr, hr = self.prepare(lr,hr)
+                timer_data.hold()
+                timer_model.tic()
 
-        pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
-        for batch_idx, (lr, hr) in enumerate(pbar):
-        # for batch_idx, (lr, hr) in enumerate(train_data):
-            lr = torch.unsqueeze(lr,0)
-            hr = torch.unsqueeze(hr,0)
+                self.optimizer.zero_grad()
 
-            lr, hr = self.prepare(lr,hr)
-            timer_data.hold()
-            timer_model.tic()
+                # forward pass with low res input and scale factor of zero
+                sr = self.model(lr, 0)
+                loss = self.loss(sr, hr)
+                loss.backward()
+            
+                self.optimizer.step()
+                timer_model.hold()
 
-            self.optimizer.zero_grad()
+                # logging every training status currently
+                self.checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+                (batch_idx + 1) * self.args.batch_size,
+                len(train_data),
+                self.loss.display_loss(batch_idx),
+                timer_model.release(),
+                timer_data.release()))
 
-            # forward pass with low res input and scale factor of zero
-            sr = self.model(lr, 0)
-            loss = self.loss(sr, hr)
-            loss.backward()
+                #print("Loss after callin the model: ", self.loss.get_last_loss())
+
+                # loss_list.append(self.loss.get_loss())
+                pbar.set_postfix({"Loss": self.loss.get_last_loss()})
+                self.trainLoss.append(self.loss.get_last_loss())
+                #print("Train status ", batch_idx + 1, " logged")
+            
+            timer_data.tic()
+            self.epoch_averages_train.append(self.loss.get_last_loss())
+            self.loss.end_log(len(train_data))
+            error_last = self.loss.log[-1, -1]
+            
+            # will be one point on the graph of total
+            self.validate_train(validation_data, len(train_data), epoch)
         
-            self.optimizer.step()
-            timer_model.hold()
+        # Training finished
+        # save the graph of the total epochs 
+        fig = plt.figure()
+        plt.title(f"Total epochs")
+        epoch_range = np.arange(self.epoch_limit) + 1
+        plt.plot(epoch_range, self.epoch_averages_validation, marker = 'o', color = 'red', label = "Validation")
+        plt.plot(epoch_range, self.epoch_averages_train, marker = 'o', color = 'blue', label = "Training")
+        plt.legend()
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.grid(True)
+        plt.savefig(os.path.join(self.args.loss_path, f'totalLoss.pdf'))
+        plt.close(fig)
 
-            # logging every training status currently
-            self.checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
-            (batch_idx + 1) * self.args.batch_size,
-            len(train_data),
-            self.loss.display_loss(batch_idx),
-            timer_model.release(),
-            timer_data.release()))
-
-            #print("Loss after callin the model: ", self.loss.get_last_loss())
-
-            # loss_list.append(self.loss.get_loss())
-            pbar.set_postfix({"Loss": self.loss.get_last_loss()})
-            self.trainLoss.append(self.loss.get_last_loss())
-            #print("Train status ", batch_idx + 1, " logged")
-        
-        timer_data.tic()
-        self.epoch_averages_train.append(self.loss.get_last_loss())
-        self.loss.end_log(len(train_data))
-        error_last = self.loss.log[-1, -1]
-        
-        # will be one point on the graph of total
-        self.validate_train(validation_data, len(train_data), epoch)
+        # saving the model 
+        self.model.save(self.args.dir_data, epoch)
+        self.test()
 
     # validation in the training
     def validate_train(self, validate_data, trainlength, epoch):
@@ -201,32 +201,27 @@ class Trainer():
         x_trainLoss = np.arange(0, trainlength)
         y_trainLoss = self.trainLoss
 
-        x_validationLoss = np.arange(trainlength, trainlength + len(validate_data))
-        y_validateLoss = self.validateLoss
+        #x_validationLoss = np.arange(trainlength, trainlength + len(validate_data))
+        #y_validateLoss = self.validateLoss
 
         # adding the average 
         self.epoch_averages_validation.append(np.average(self.validateLoss))
 
-        # Plot for one epoch
-        fig = plt.figure()
-        plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
-        plt.plot(x_validationLoss, y_validateLoss, marker = 'o', color = 'blue')
-        plt.title(f"Loss Function epoch {epoch}")
-        plt.xlabel('Batches')
-        plt.ylabel('Loss')
-        plt.grid(True)
-        plt.savefig(os.path.join(self.args.loss_path, f'Epoch_{epoch}.pdf'))
-        plt.close(fig)
-
-
-        # train at the end of the validation
-        torch.set_grad_enabled(True)
-        self.model.train()  # Set the model back to training mode
-        self.optimizer.schedule()
-        self.train()
+        # Plot for one epoch, plotting one every 10
+        
+        if(epoch) % self.args.print_every == 0:
+            fig = plt.figure()
+            plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
+            plt.title(f"Loss Function epoch {epoch}")
+            plt.xlabel('Batches')
+            plt.ylabel('Loss')
+            plt.grid(True)
+            plt.savefig(os.path.join(self.args.loss_path, f'Epoch_{epoch}.pdf'))
+            plt.close(fig)
     
     # this will both save the model and test on the test images
     def test(self):
+        print("Testing starting...")
         torch.set_grad_enabled(False)
 
         epoch = self.optimizer.get_last_epoch()
@@ -238,10 +233,9 @@ class Trainer():
         #if self.args.save_results: self.ckp.begin_background()
 
         test_data = self.testTot
-        pbar = tqdm(test_data, total=len(test_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        pbar = tqdm(test_data, total=len(test_data), desc=f"Testing {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
-        dataset = self.loaderTot.dataset
         self.loaderTot.dataset.set_scale(scale)
         for idx_data, (lr, hr) in enumerate(pbar): 
             lr = torch.unsqueeze(lr,0)
@@ -252,29 +246,29 @@ class Trainer():
             sr = utility.quantize(sr, self.args.rgb_range)
 
             save_list = [sr]
-            self.ckp.log[-1, idx_data, scale] += utility.calc_psnr(
-                sr, hr, scale, self.args.rgb_range, dataset=dataset
-            )
+            #self.ckp.log[-1, idx_data, scale] += utility.calc_psnr(
+            #    sr, hr, scale, self.args.rgb_range, dataset=dataset
+            #)
             if self.args.save_gt:
                 save_list.extend([lr, hr])
 
-            if self.args.save_results:
-                self.ckp.save_results(save_list)
+            #if self.args.save_results:
+            #    self.ckp.save_results(save_list)
         
-        self.ckp.log[-1, idx_data, scale] /= len(dataset)
-        best = self.ckp.log.max(0)
-        self.ckp.write_log(
-            '[{:.3f} (Best: {:.3f} @epoch {})'.format(
-                self.ckp.log[-1, idx_data, scale],
-                best[0][idx_data, scale],
-                best[1][idx_data, scale] + 1
-            )
-        )
+        #self.ckp.log[-1, idx_data, scale] /= len(dataset)
+        #best = self.ckp.log.max(0)
+        #self.ckp.write_log(
+        #    '[{:.3f} (Best: {:.3f} @epoch {})'.format(
+        #        self.ckp.log[-1, idx_data, scale],
+        #        best[0][idx_data, scale],
+        #        best[1][idx_data, scale] + 1
+        #    )
+        #)
 
         self.ckp.write_log('Saving...')
 
-        #if not self.args.test_only:
-        #    self.ckp.save(self, epoch, is_best=(best[1][0, 0] + 1 == epoch))
+        if not self.args.test_only:
+            self.ckp.save(self, epoch)
 
         self.ckp.write_log(
             'Total: {:.2f}s\n'.format(timer_test.toc()), refresh=True
