@@ -58,12 +58,11 @@ class Trainer():
         self.testTot = test_files
 
         self.train()
+        self.test()
 
     def train(self):
         # loop over 2 epochs
         for epoch in range(1, self.epoch_limit + 1):
-            # epoch = self.optimizer.get_last_epoch() +1
-
             # taking the first ten percent of the training images as validation 
             # after validating in the validation function, shuffles and takes another 
             validate_ind = (len(self.trainTot)) // 10
@@ -94,7 +93,6 @@ class Trainer():
 
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
             for batch_idx, (lr, hr) in enumerate(pbar):
-            # for batch_idx, (lr, hr) in enumerate(train_data):
                 lr = torch.unsqueeze(lr,0)
                 hr = torch.unsqueeze(hr,0)
 
@@ -151,7 +149,6 @@ class Trainer():
 
         # saving the model 
         self.model.save(self.args.dir_data, epoch)
-        self.test()
 
     # validation in the training
     def validate_train(self, validate_data, trainlength, epoch):
@@ -193,22 +190,15 @@ class Trainer():
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
 
-        # for plotting the loss with the validation
-
-        # printing both the validation and the training loss
-
         # saves the validation loss and training loss for epoch graph
         x_trainLoss = np.arange(0, trainlength)
         y_trainLoss = self.trainLoss
-
-        #x_validationLoss = np.arange(trainlength, trainlength + len(validate_data))
-        #y_validateLoss = self.validateLoss
 
         # adding the average 
         self.epoch_averages_validation.append(np.average(self.validateLoss))
 
         # Plot for one epoch, plotting one every 10
-        
+        # will also save the model 
         if(epoch) % self.args.print_every == 0:
             fig = plt.figure()
             plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
@@ -218,25 +208,37 @@ class Trainer():
             plt.grid(True)
             plt.savefig(os.path.join(self.args.loss_path, f'Epoch_{epoch}.pdf'))
             plt.close(fig)
-    
+
+            # save the model checkpoint
+            self.model.save(self.args.dir_data, epoch)
+
+        # check for best model
+
     # this will both save the model and test on the test images
     def test(self):
         print("Testing starting...")
+
+        # load in the best model
+        
+
         torch.set_grad_enabled(False)
 
         epoch = self.optimizer.get_last_epoch()
         self.model.eval()
 
+        self.ckp.write_log('\nEvaluation:')
+        self.ckp.add_log(
+            torch.zeros(1, len(self.testTot), len(self.scale))
+        )
+
         timer_test = utility.timer()
 
-        # multiprocessing 
-        #if self.args.save_results: self.ckp.begin_background()
-
         test_data = self.testTot
-        pbar = tqdm(test_data, total=len(test_data), desc=f"Testing {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
+        test_lossList = []
         for idx_data, (lr, hr) in enumerate(pbar): 
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
@@ -244,26 +246,18 @@ class Trainer():
             lr, hr = self.prepare(lr,hr)
             sr = self.model(lr, scale)
             sr = utility.quantize(sr, self.args.rgb_range)
+            loss = self.loss(sr, hr)
+            test_lossList.append(loss) 
 
             save_list = [sr]
-            #self.ckp.log[-1, idx_data, scale] += utility.calc_psnr(
-            #    sr, hr, scale, self.args.rgb_range, dataset=dataset
-            #)
+
+            # this adds the low resolution and high resolution images to the list
             if self.args.save_gt:
                 save_list.extend([lr, hr])
 
-            #if self.args.save_results:
-            #    self.ckp.save_results(save_list)
-        
-        #self.ckp.log[-1, idx_data, scale] /= len(dataset)
-        #best = self.ckp.log.max(0)
-        #self.ckp.write_log(
-        #    '[{:.3f} (Best: {:.3f} @epoch {})'.format(
-        #        self.ckp.log[-1, idx_data, scale],
-        #        best[0][idx_data, scale],
-        #        best[1][idx_data, scale] + 1
-        #    )
-        #)
+            if self.args.save_results:
+                self.ckp.save_results(save_list, idx_data, loss)
+
 
         self.ckp.write_log('Saving...')
 
