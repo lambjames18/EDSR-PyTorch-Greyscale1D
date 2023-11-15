@@ -219,7 +219,9 @@ class Trainer():
         print("Testing starting...")
 
         # load in the best model
-        
+        # currently loads in the latest model
+        # change to load in the best model
+        self.model.load(self.args.dir_data)
 
         torch.set_grad_enabled(False)
 
@@ -255,6 +257,7 @@ class Trainer():
             if self.args.save_gt:
                 save_list.extend([lr, hr])
 
+            # saves the results in the designated folders
             if self.args.save_results:
                 self.ckp.save_results(save_list, idx_data, loss)
 

@@ -90,7 +90,8 @@ class checkpoint():
 
     def get_path(self, *subdir):
         return os.path.join(self.dir, *subdir)
-
+    
+    # change this so that the average loss is plotted
     def save(self, trainer, epoch):
         trainer.model.save(self.get_path('model'), epoch)
         trainer.loss.save(self.dir)
