@@ -59,10 +59,12 @@ class checkpoint():
         if not args.load:
             if not args.save:
                 args.save = now
+            # make a test folder with the SR, HR, LR
             self.dir = os.path.join(self.args.dir_data, args.save)
+            os.makedirs(self.dir, exist_ok = True)
             #self.dir = os.path.join('..', 'experiment', args.save)
         else:
-            self.dir = os.path.join(self.args.dir_data, args.save)
+            self.dir = os.path.join(self.args.dir_data, args.load)
             #self.dir = os.path.join('..', 'experiment', args.load)
             if os.path.exists(self.dir):
                 self.log = torch.load(self.get_path('psnr_log.pt'))
@@ -156,10 +158,9 @@ class checkpoint():
         if self.args.save_results:
             # save list format: sr, lr, hr
             postfix = ('SR', 'LR', 'HR')
-            results_path = os.path.join(self.args.dir_data, 'Output')
 
             for i in postfix:
-                path = os.path.join(results_path, i)
+                path = os.path.join(self.dir_data, i)
                 os.makedirs(path, exist_ok = True)
 
             filename = 'results-{}'.format(index)
@@ -170,7 +171,7 @@ class checkpoint():
                     filename += 'loss-{}'.format(loss)
                 normalized = v[0].mul(255 / self.args.rgb_range)
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                io.imsave('{}{}.tiff'.format(filename, p), os.path.join(results_path, p))
+                io.imsave('{}{}.tiff'.format(filename, p), os.path.join(self.dir_data, p))
                 #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
 
 def quantize(img, rgb_range):
