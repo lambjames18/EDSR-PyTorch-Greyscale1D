@@ -38,6 +38,8 @@ class Trainer():
         self.epoch_limit = epoch_limit
         self.epoch_averages_validation = []
         self.epoch_averages_train = []
+
+        self.error_last = 1e8
     
     # splits the training and testing based off of the indices 
     # runs the training and testing accordingly
@@ -72,9 +74,13 @@ class Trainer():
             train_data = self.trainTot[validate_ind:]
 
             self.loss.step()
-
             # getting the learning rate 
             lr_rate = self.optimizer.get_lr()
+
+            # writing to the text file
+            self.ckp.write_log(
+                '[Epoch {}]\tLearning rate: {:.2e}'.format(epoch, Decimal(lr_rate))
+            )
 
             # initialization of loss log
             self.loss.start_log()
@@ -110,13 +116,16 @@ class Trainer():
                 self.optimizer.step()
                 timer_model.hold()
 
-                # logging every training status currently
-                self.checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
-                (batch_idx + 1) * self.args.batch_size,
-                len(train_data),
-                self.loss.display_loss(batch_idx),
-                timer_model.release(),
-                timer_data.release()))
+                # writing every training status for print every 
+                if (batch_idx + 1) % self.args.print_every == 0:
+                    self.ckp.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+                        (batch_idx + 1) * self.args.batch_size,
+                        len(train_data),
+                        self.loss.display_loss(batch_idx),
+                        timer_model.release(),
+                        timer_data.release()))
+                    
+                timer_data.tic()
 
                 #print("Loss after callin the model: ", self.loss.get_last_loss())
 
@@ -125,10 +134,9 @@ class Trainer():
                 self.trainLoss.append(self.loss.get_last_loss())
                 #print("Train status ", batch_idx + 1, " logged")
             
-            timer_data.tic()
             self.epoch_averages_train.append(self.loss.get_last_loss())
             self.loss.end_log(len(train_data))
-            error_last = self.loss.log[-1, -1]
+            self.error_last = self.loss.log[-1, -1]
             
             # will be one point on the graph of total
             self.validate_train(validation_data, len(train_data), epoch)
@@ -159,6 +167,11 @@ class Trainer():
         print("Validation Loss Log started")
         self.validateLoss = []
 
+        self.ckp.write_log('\nValidation:')
+        self.ckp.add_log(
+            torch.zeros(1, len(validate_data), len(self.scale))
+        )
+
         # the weights wont be updated 
         self.model.eval()
 
@@ -179,7 +192,7 @@ class Trainer():
                 loss = self.loss(sr, hr)
 
                 # logging the validation
-                self.checkpoint.write_log('Validation: [{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+                self.checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
                     (batch_idx+1),
                     len(validate_data),
                     self.loss.display_loss(batch_idx),
@@ -190,7 +203,7 @@ class Trainer():
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
 
-        # saves the validation loss and training loss for epoch graph
+        # saves training loss for epoch graph
         x_trainLoss = np.arange(0, trainlength)
         y_trainLoss = self.trainLoss
 
@@ -214,6 +227,7 @@ class Trainer():
 
         # check for best model
 
+
     # this will both save the model and test on the test images
     def test(self):
         print("Testing starting...")
@@ -236,6 +250,7 @@ class Trainer():
         timer_test = utility.timer()
 
         test_data = self.testTot
+        # only taking the first 2 training imagesß
         pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
@@ -252,6 +267,11 @@ class Trainer():
             test_lossList.append(loss) 
 
             save_list = [sr]
+            
+            # logging the psnr for one image
+            self.ckp.log[-1, idx_data] += utility.calc_psnr(
+                sr, hr, scale, self.args.rgb_range
+            )
 
             # this adds the low resolution and high resolution images to the list
             if self.args.save_gt:
@@ -260,16 +280,19 @@ class Trainer():
             # saves the results in the designated folders
             if self.args.save_results:
                 self.ckp.save_results(save_list, idx_data, loss)
+            
+        
 
 
-        self.ckp.write_log('Saving...')
+        #self.ckp.write_log('Saving...')
 
+        # saves the model, loss, and the pnsr model
         if not self.args.test_only:
             self.ckp.save(self, epoch)
 
-        self.ckp.write_log(
-            'Total: {:.2f}s\n'.format(timer_test.toc()), refresh=True
-        )
+        #self.ckp.write_log(
+        #    'Total: {:.2f}s\n'.format(timer_test.toc()), refresh=True
+        #)
 
         torch.set_grad_enabled(True)
 
