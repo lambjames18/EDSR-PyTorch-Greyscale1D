@@ -67,15 +67,6 @@ class Trainer():
             #lr = torch.unsqueeze(lr,0)
             #hr = torch.unsqueeze(hr,0)
             test_files.append((lr,hr))
-
-        # for batch_ind in range(len(self.loaderTot)):
-        #     if batch_ind in self.trainTnd:
-        #         self.loaderTot.dataset.set_as_training()
-        #         (lr,hr) = self.loaderTot.dataset[batch_ind]
-        #         train_files.append((lr,hr))
-        #     elif batch_ind in self.testInd:
-        #         (lr,hr) = self.loaderTot.dataset[batch_ind]
-        #         test_files.append((lr,hr))
         
         self.trainTot = train_files
         self.testTot = test_files
@@ -83,6 +74,7 @@ class Trainer():
         self.train()
         self.test()
 
+# training and validation log output
     def train(self):
         self.best_validation_average = 1e8
         # loop over 2 epochs

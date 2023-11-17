@@ -171,13 +171,14 @@ class checkpoint():
                     filename += 'loss-{}'.format(loss)
                 normalized = v[0].mul(255 / self.args.rgb_range)
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                io.imsave('{}{}.tiff'.format(filename, p), os.path.join(self.dir_data, p))
+                io.imsave(os.path.join(self.dir, '{}.tiff'.format(p + filename)), np.squeeze(normalized.numpy()))
                 #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
 
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
     return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
 
+# look into the conversion for greyscale
 def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
     if hr.nelement() == 1: return 0
 

@@ -84,6 +84,8 @@ class Model(nn.Module):
             torch.save(self.model.state_dict(), s)
 
     # loads the model when testing on the best model
+    #load any model we give it
+    # for testing after training, load in the best model
     def load(self, apath, pre_train='', resume=-1, cpu=False):
         load_from = None
         kwargs = {}
@@ -109,13 +111,14 @@ class Model(nn.Module):
                 )
             elif pre_train:
                 print('Load the model from {}'.format(pre_train))
+                # keep
                 load_from = torch.load(pre_train, **kwargs)
         else:
             load_from = torch.load(
                 os.path.join(apath, 'model_{}.pt'.format(resume)),
                 **kwargs
             )
-
+        #keep
         if load_from:
             self.model.load_state_dict(load_from, strict=False)
 
