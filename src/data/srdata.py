@@ -54,9 +54,6 @@ class SRData(data.Dataset):
             if file.endswith('.tif'):
                 imgs.append(io.imread(os.path.join(self.apath, file)))
             if len(imgs) > self.args.imageLim and self.args.imageLim != 0:
-                print("imageLim: ", self.args.imageLim)
-                print("Made to break images at: ", len(imgs))
-                exit()
                 break
 
         # fill the high res and low res

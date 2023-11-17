@@ -64,8 +64,8 @@ class Trainer():
         self.loaderTot.dataset.set_as_testing()
         for i in self.testInd // self.args.batch_size:
             lr, hr = self.loaderTot.dataset[i]
-            lr = torch.unsqueeze(lr,0)
-            hr = torch.unsqueeze(hr,0)
+            #lr = torch.unsqueeze(lr,0)
+            #hr = torch.unsqueeze(hr,0)
             test_files.append((lr,hr))
 
         # for batch_ind in range(len(self.loaderTot)):
@@ -120,8 +120,8 @@ class Trainer():
 
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
             for batch_idx, (lr, hr) in enumerate(pbar):
-                lr = torch.unsqueeze(lr,0)
-                hr = torch.unsqueeze(hr,0)
+                #lr = torch.unsqueeze(lr,0)
+                #hr = torch.unsqueeze(hr,0)
 
                 lr, hr = self.prepare(lr,hr)
                 timer_data.hold()
@@ -137,14 +137,13 @@ class Trainer():
                 self.optimizer.step()
                 timer_model.hold()
 
-                # writing every training status for print every 
-                if (batch_idx + 1) % self.args.print_every == 0:
-                    self.ckp.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
-                        (batch_idx + 1) * self.args.batch_size,
-                        len(train_data),
-                        self.loss.display_loss(batch_idx),
-                        timer_model.release(),
-                        timer_data.release()))
+                
+                self.ckp.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
+                    (batch_idx + 1) * self.args.batch_size,
+                    len(train_data),
+                    self.loss.display_loss(batch_idx),
+                    timer_model.release(),
+                    timer_data.release()))
                     
                 timer_data.tic()
 
