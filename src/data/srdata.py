@@ -37,6 +37,10 @@ class SRData(data.Dataset):
         else:
             self.repeat = max(n_patches // n_images, 1)
 
+    def set_as_testing(self):
+        self.train = False
+        self.repeat = 1
+
     # fills the high res and low res folders from the raw
     # save to the high res and low res, dont save
     def fill_HR_LR(self):

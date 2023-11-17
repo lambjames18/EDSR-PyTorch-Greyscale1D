@@ -30,7 +30,7 @@ class Trainer():
         self.model = my_model
         self.ckp = checkpoint
         self.loaderTot = loader.total_loader
-        self.trainTnd = trainInd
+        self.trainInd = trainInd
         self.testInd = testInd
         self.optimizer = utility.make_optimizer(self.args, self.model)
         self.checkpoint = utility.checkpoint(self.args)
@@ -45,14 +45,35 @@ class Trainer():
         train_files = []
         test_files = []
 
-        for batch_ind in range(len(self.loaderTot)):
-            if batch_ind in self.trainTnd:
-                self.loaderTot.dataset.set_as_training()
-                (lr,hr) = self.loaderTot.dataset[batch_ind]
-                train_files.append((lr,hr))
-            elif batch_ind in self.testInd:
-                (lr,hr) = self.loaderTot.dataset[batch_ind]
-                test_files.append((lr,hr))
+        # Get the training data
+        self.loaderTot.dataset.set_as_training()
+        for i in self.trainInd // self.args.batch_size:
+            lr_batch = []
+            hr_batch = []
+            for j in range(self.args.batch_size):
+                lr, hr = self.loaderTot.dataset[i*self.args.batch_size+j]
+                lr_batch.append(lr)
+                hr_batch.append(hr)
+            lr_stack = torch.stack(lr_batch)
+            hr_stack = torch.stack(hr_batch)
+            train_files.append((lr_stack, hr_stack))
+
+        # Get the testing data, but dont implement a batch size
+        self.loaderTot.dataset.set_as_testing()
+        for i in self.testInd // self.args.batch_size:
+            lr, hr = self.loaderTot.dataset[i]
+            lr = torch.unsqueeze(lr,0)
+            hr = torch.unsqueeze(hr,0)
+            test_files.append((lr,hr))
+
+        # for batch_ind in range(len(self.loaderTot)):
+        #     if batch_ind in self.trainTnd:
+        #         self.loaderTot.dataset.set_as_training()
+        #         (lr,hr) = self.loaderTot.dataset[batch_ind]
+        #         train_files.append((lr,hr))
+        #     elif batch_ind in self.testInd:
+        #         (lr,hr) = self.loaderTot.dataset[batch_ind]
+        #         test_files.append((lr,hr))
         
         self.trainTot = train_files
         self.testTot = test_files
@@ -95,8 +116,8 @@ class Trainer():
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
             for batch_idx, (lr, hr) in enumerate(pbar):
             # for batch_idx, (lr, hr) in enumerate(train_data):
-                lr = torch.unsqueeze(lr,0)
-                hr = torch.unsqueeze(hr,0)
+                # lr = torch.unsqueeze(lr,0)
+                # hr = torch.unsqueeze(hr,0)
 
                 lr, hr = self.prepare(lr,hr)
                 timer_data.hold()
@@ -169,8 +190,8 @@ class Trainer():
 
         # looping through the validation 
         for batch_idx, (lr,hr) in enumerate(validate_data):
-            lr = torch.unsqueeze(lr,0)
-            hr = torch.unsqueeze(hr,0)
+            # lr = torch.unsqueeze(lr,0)
+            # hr = torch.unsqueeze(hr,0)
 
             lr, hr = self.prepare(lr,hr)
 
@@ -238,8 +259,8 @@ class Trainer():
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
         for idx_data, (lr, hr) in enumerate(pbar): 
-            lr = torch.unsqueeze(lr,0)
-            hr = torch.unsqueeze(hr,0)
+            # lr = torch.unsqueeze(lr,0)
+            # hr = torch.unsqueeze(hr,0)
 
             lr, hr = self.prepare(lr,hr)
             sr = self.model(lr, scale)
