@@ -84,6 +84,7 @@ class Trainer():
         self.test()
 
     def train(self):
+        self.best_validation_average = 1e8
         # loop over 2 epochs
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
@@ -247,6 +248,10 @@ class Trainer():
             self.model.save(self.args.dir_data, epoch)
 
         # check for best model
+        if self.epoch_averages_validation[-1] < self.best_validation_average:
+            self.best_average = self.epoch_averages_validation[-1]
+            self.model.save(self.args.dir_data, epoch, is_best=True)
+
 
 
     # this will both save the model and test on the test images
