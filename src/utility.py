@@ -2,6 +2,7 @@ import os
 import math
 import time
 import datetime
+from skimage import io
 #from multiprocessing import Process
 #from multiprocessing import Queue
 
@@ -58,9 +59,13 @@ class checkpoint():
         if not args.load:
             if not args.save:
                 args.save = now
-            self.dir = os.path.join('..', 'experiment', args.save)
+            # make a test folder with the SR, HR, LR
+            self.dir = os.path.join(self.args.dir_data, args.save)
+            os.makedirs(self.dir, exist_ok = True)
+            #self.dir = os.path.join('..', 'experiment', args.save)
         else:
-            self.dir = os.path.join('..', 'experiment', args.load)
+            self.dir = os.path.join(self.args.dir_data, args.load)
+            #self.dir = os.path.join('..', 'experiment', args.load)
             if os.path.exists(self.dir):
                 self.log = torch.load(self.get_path('psnr_log.pt'))
                 print('Continue from epoch {}...'.format(len(self.log)))
@@ -89,7 +94,8 @@ class checkpoint():
 
     def get_path(self, *subdir):
         return os.path.join(self.dir, *subdir)
-
+    
+    # change this so that the average loss is plotted
     def save(self, trainer, epoch):
         trainer.model.save(self.get_path('model'), epoch)
         trainer.loss.save(self.dir)
@@ -148,18 +154,25 @@ class checkpoint():
         while not self.queue.empty(): time.sleep(1)
         for p in self.process: p.join()
 
-    def save_results(self, save_list):
+    def save_results(self, save_list, index, loss):
         if self.args.save_results:
-            '''filename = self.get_path(
-                'results-{}'.format(dataset.dataset.name),
-                '{}_x{}_'.format(filename, scale)
-            )'''
+            # save list format: sr, lr, hr
+            postfix = ('SR', 'LR', 'HR')
 
+            for i in postfix:
+                path = os.path.join(self.dir_data, i)
+                os.makedirs(path, exist_ok = True)
+
+            filename = 'results-{}'.format(index)
+            
             postfix = ('SR', 'LR', 'HR')
             for v, p in zip(save_list, postfix):
+                if p == 'SR': 
+                    filename += 'loss-{}'.format(loss)
                 normalized = v[0].mul(255 / self.args.rgb_range)
-                tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                self.queue.put(('{}.tiff'.format(p), tensor_cpu))
+                # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
+                io.imsave('{}{}.tiff'.format(filename, p), os.path.join(self.dir_data, p))
+                #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
 
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
