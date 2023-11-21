@@ -68,18 +68,17 @@ class Model(nn.Module):
     # use this to save the model
     def save(self, apath, epoch, is_best=False):
         # create a folder for the model
-        model_dir = os.path.join(apath, 'model')
+        modelPath = os.path.join(self.args.dir_data, self.args.load)
+        os.makedirs(modelPath, exist_ok=True)
+
+        model_dir = os.path.join(modelPath, 'model')
         os.makedirs(model_dir, exist_ok=True)
         
-        save_dirs = [os.path.join(model_dir, 'model_latest.pt')]
+        save_dirs = [os.path.join(model_dir, 'model_{}.pt'.format(epoch))]
 
         if is_best:
             save_dirs.append(os.path.join(apath, 'model_best.pt'))
-        if self.save_models:
-            save_dirs.append(
-                os.path.join(apath, 'model_{}.pt'.format(epoch))
-            )
-
+            
         for s in save_dirs:
             torch.save(self.model.state_dict(), s)
 

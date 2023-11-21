@@ -168,9 +168,6 @@ class Trainer():
         plt.savefig(os.path.join(self.args.loss_path, f'totalLoss.pdf'))
         plt.close(fig)
 
-        # saving the model 
-        self.model.save(self.args.dir_data, epoch)
-
     # validation in the training
     def validate_train(self, validate_data, trainlength, epoch):
         torch.set_grad_enabled(False)
