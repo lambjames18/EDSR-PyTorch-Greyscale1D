@@ -11,6 +11,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
         print('Making model...')
 
+        self.args = args
         self.scale = args.scale
         self.idx_scale = 0
         self.self_ensemble = args.self_ensemble
@@ -67,20 +68,15 @@ class Model(nn.Module):
 
     # use this to save the model
     def save(self, apath, epoch, is_best=False):
-        # create a folder for the model
-        modelPath = os.path.join(self.args.dir_data, self.args.load)
-        os.makedirs(modelPath, exist_ok=True)
-
-        model_dir = os.path.join(modelPath, 'model')
+        model_dir = os.path.join(self.args.dir_data, 'model')
         os.makedirs(model_dir, exist_ok=True)
-        
-        save_dirs = [os.path.join(model_dir, 'model_{}.pt'.format(epoch))]
 
         if is_best:
-            save_dirs.append(os.path.join(apath, 'model_best.pt'))
+            save_dirs=os.path.join(model_dir, 'model_best.pt')
+        else: 
+            save_dirs = os.path.join(model_dir, 'model_{}.pt'.format(epoch))
             
-        for s in save_dirs:
-            torch.save(self.model.state_dict(), s)
+        torch.save(self.model.state_dict(), save_dirs)
 
     # loads the model when testing on the best model
     # load any model we give it
@@ -93,7 +89,7 @@ class Model(nn.Module):
         else:
             kwargs = {'map_location': self.device}
 
-        if resume == -1:
+        '''if resume == -1:
             load_from = torch.load(
                 os.path.join(apath, 'model_latest.pt'),
                 **kwargs
@@ -116,13 +112,22 @@ class Model(nn.Module):
             load_from = torch.load(
                 os.path.join(apath, 'model_{}.pt'.format(resume)),
                 **kwargs
+            )'''
+        
+        # Loading from pretrain
+        if pre_train: 
+            print('Load the model from {}'.format(pre_train))
+            load_from = torch.load(pre_train, **kwargs)
+        
+        # the default is loading in the best model 
+        elif resume == -1: 
+            load_from = torch.load(
+                os.path.join(apath, 'model_best.pt'),
+                **kwargs
             )
-        #keep
+
         if load_from:
             self.model.load_state_dict(load_from, strict=False)
-
-        # set to load from the best model
-        self.model.load_state_dict(load_from, strict=False)
 
     def forward_chop(self, *args, shave=10, min_size=160000):
         scale = self.scale[self.idx_scale]

@@ -220,9 +220,9 @@ class Trainer():
         # adding the average 
         self.epoch_averages_validation.append(np.average(self.validateLoss))
 
-        # Plot for one epoch, plotting one every 10
+        # Plot for one epoch, plotting one every 10, as well as the first one
         # will also save the model 
-        if(epoch) % self.args.print_every == 0:
+        if((epoch) % self.args.print_every == 0) or (epoch == 1):
             fig = plt.figure()
             plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
             plt.title(f"Loss Function epoch {epoch}")
@@ -248,7 +248,8 @@ class Trainer():
 
         # load in the best model
         # if loading in pretrained model, set pre_train to model path
-        self.model.load(self.args.dir_data)
+        modelPath = os.path.join(self.args.dir_data, 'model')
+        self.model.load(modelPath)
 
         torch.set_grad_enabled(False)
 
@@ -256,9 +257,9 @@ class Trainer():
         self.model.eval()
 
         self.ckp.write_log('\nEvaluation:')
-        self.ckp.add_log(
-            torch.zeros(1, len(self.testTot), len(self.scale))
-        )
+        #self.ckp.add_log(
+        #    torch.zeros(1, len(self.testTot), len(self.scale))
+        #)
 
         timer_test = utility.timer()
 
@@ -279,9 +280,9 @@ class Trainer():
             save_list = [sr]
             
             # logging the psnr for one image
-            self.ckp.log[-1, idx_data] += utility.calc_psnr(
-                sr, hr, scale, self.args.rgb_range
-            )
+            #self.ckp.log[-1, idx_data] += utility.calc_psnr(
+            #    sr, hr, scale, self.args.rgb_range
+            #)
 
             # this adds the low resolution and high resolution images to the list
             if self.args.save_gt:
