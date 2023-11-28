@@ -247,8 +247,7 @@ class Trainer():
         print("Testing starting...")
 
         # load in the best model
-        # currently loads in the latest model
-        # change to load in the best model
+        # if loading in pretrained model, set pre_train to model path
         self.model.load(self.args.dir_data)
 
         torch.set_grad_enabled(False)
@@ -264,16 +263,13 @@ class Trainer():
         timer_test = utility.timer()
 
         test_data = self.testTot
-        # only taking the first 2 training imagesß
+        # only taking the first 2 training images for now 
         pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
         test_lossList = []
         for idx_data, (lr, hr) in enumerate(pbar): 
-            # lr = torch.unsqueeze(lr,0)
-            # hr = torch.unsqueeze(hr,0)
-
             lr, hr = self.prepare(lr,hr)
             sr = self.model(lr, scale)
             sr = utility.quantize(sr, self.args.rgb_range)
@@ -295,9 +291,6 @@ class Trainer():
             if self.args.save_results:
                 self.ckp.save_results(save_list, idx_data, loss)
             
-        
-
-
         #self.ckp.write_log('Saving...')
 
         # saves the model, loss, and the pnsr model
