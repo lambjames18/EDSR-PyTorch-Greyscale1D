@@ -86,12 +86,15 @@ class Model(nn.Module):
     # load any model we give it
     # for testing after training, load in the best model
     def load(self, pre_train='', resume=-1, cpu=False):
+        
         load_from = None
         kwargs = {}
         if cpu:
             kwargs = {'map_location': lambda storage, loc: storage}
         else:
             kwargs = {'map_location': self.device}
+        
+        resume+=1
 
         '''if resume == -1:
             load_from = torch.load(
@@ -122,7 +125,7 @@ class Model(nn.Module):
         if pre_train: 
             print('Load the model from {}'.format(pre_train))
             load_from = torch.load(pre_train, **kwargs)
-            
+
         # default is loading in the best model
         else:
             load_from = torch.load(
