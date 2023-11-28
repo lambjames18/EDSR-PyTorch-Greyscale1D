@@ -85,18 +85,15 @@ class Model(nn.Module):
     # loads the model when testing on the best model
     # load any model we give it
     # for testing after training, load in the best model
-    def load(self, pre_train='', resume=-1, cpu=False):
-        
+    def load(self, apath, pre_train='', resume=-1, cpu=False):
         load_from = None
         kwargs = {}
         if cpu:
             kwargs = {'map_location': lambda storage, loc: storage}
         else:
             kwargs = {'map_location': self.device}
-        
-        resume+=1
 
-        '''if resume == -1:
+        if resume == -1:
             load_from = torch.load(
                 os.path.join(apath, 'model_latest.pt'),
                 **kwargs
@@ -119,19 +116,10 @@ class Model(nn.Module):
             load_from = torch.load(
                 os.path.join(apath, 'model_{}.pt'.format(resume)),
                 **kwargs
-            )'''
-        
-        # loading a pretrained model
-        if pre_train: 
-            print('Load the model from {}'.format(pre_train))
-            load_from = torch.load(pre_train, **kwargs)
-
-        # default is loading in the best model
-        else:
-            load_from = torch.load(
-                os.path.join(self.args.dir_data, self.args.load, 'model_best.pt'),
-                **kwargs
             )
+        #keep
+        if load_from:
+            self.model.load_state_dict(load_from, strict=False)
 
         # set to load from the best model
         self.model.load_state_dict(load_from, strict=False)
