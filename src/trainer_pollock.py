@@ -77,6 +77,8 @@ class Trainer():
 # training and validation log output
     def train(self):
         self.best_validation_average = 1e8
+
+        self.ckp.write_log('\nTraining:')
         # loop over 2 epochs
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
@@ -246,6 +248,8 @@ class Trainer():
     def test(self):
         print("Testing starting...")
 
+        self.ckp.write_log('\nTesting:')
+
         # load in the best model
         # if loading in pretrained model, set pre_train to model path
         modelPath = os.path.join(self.args.dir_data, 'model')
@@ -257,6 +261,7 @@ class Trainer():
         self.model.eval()
 
         self.ckp.write_log('\nEvaluation:')
+        
         #self.ckp.add_log(
         #    torch.zeros(1, len(self.testTot), len(self.scale))
         #)
