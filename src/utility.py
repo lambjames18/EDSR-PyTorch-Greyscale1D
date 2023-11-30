@@ -169,9 +169,13 @@ class checkpoint():
             for v, p in zip(save_list, postfix):
                 if p == 'SR': 
                     filename += 'loss-{}'.format(loss)
+
                 normalized = v[0].mul(255 / self.args.rgb_range)
+
+                image_array = np.squeeze(normalized.cpu().numpy())
+
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                io.imsave(os.path.join(self.dir, '{}.tiff'.format(p + filename)), np.squeeze(normalized.cpu().numpy()))
+                io.imsave(os.path.join(self.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
                 #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
 
 def quantize(img, rgb_range):
