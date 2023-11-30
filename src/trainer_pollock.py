@@ -278,7 +278,7 @@ class Trainer():
             loss = self.loss(sr, hr)
             test_lossList.append(loss) 
 
-            save_list = [sr]
+            save_list = [sr,lr,hr]
             
             # logging the psnr for one image
             #self.ckp.log[-1, idx_data] += utility.calc_psnr(

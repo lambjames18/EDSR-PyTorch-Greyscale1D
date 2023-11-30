@@ -76,10 +76,10 @@ class checkpoint():
             os.system('rm -rf ' + self.dir)
             args.load = ''
 
-        os.makedirs(self.dir, exist_ok=True)
-        os.makedirs(self.get_path('model'), exist_ok=True)
-        for d in args.data_test:
-            os.makedirs(self.get_path('results-{}'.format(d)), exist_ok=True)
+        #os.makedirs(self.dir, exist_ok=True)
+        #os.makedirs(self.get_path('model'), exist_ok=True)
+        #for d in args.data_test:
+        #    os.makedirs(self.get_path('results-{}'.format(d)), exist_ok=True)
 
         open_type = 'a' if os.path.exists(self.get_path('log.txt'))else 'w'
         self.log_file = open(self.get_path('log.txt'), open_type)
@@ -97,7 +97,7 @@ class checkpoint():
     
     # change this so that the average loss is plotted
     def save(self, trainer, epoch):
-        trainer.model.save(self.get_path('model'), epoch)
+        #trainer.model.save(self.get_path('model'), epoch)
         trainer.loss.save(self.dir)
         trainer.loss.plot_loss(self.dir, epoch)
 
@@ -162,20 +162,21 @@ class checkpoint():
             for i in postfix:
                 path = os.path.join(self.args.dir_data, 'test', i)
                 os.makedirs(path, exist_ok = True)
-
-            filename = 'results-{}'.format(index)
             
             postfix = ('SR', 'LR', 'HR')
             for v, p in zip(save_list, postfix):
+
+                filename = 'results-{}'.format(index)
+
                 if p == 'SR': 
-                    filename += 'loss-{}'.format(loss)
+                    filename += '_loss-{}'.format(np.round(loss.cpu(),3))
 
                 normalized = v[0].mul(255 / self.args.rgb_range)
 
                 image_array = np.squeeze(normalized.cpu().numpy())
 
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                io.imsave(os.path.join(self.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
+                io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
                 #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
 
 def quantize(img, rgb_range):
