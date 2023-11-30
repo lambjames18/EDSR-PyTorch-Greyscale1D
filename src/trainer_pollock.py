@@ -64,8 +64,8 @@ class Trainer():
         self.loaderTot.dataset.set_as_testing()
         for i in self.testInd // self.args.batch_size:
             lr, hr = self.loaderTot.dataset[i]
-            #lr = torch.unsqueeze(lr,0)
-            #hr = torch.unsqueeze(hr,0)
+            lr = torch.unsqueeze(lr,0)
+            hr = torch.unsqueeze(hr,0)
             test_files.append((lr,hr))
         
         self.trainTot = train_files
@@ -272,6 +272,7 @@ class Trainer():
         test_lossList = []
         for idx_data, (lr, hr) in enumerate(pbar): 
             lr, hr = self.prepare(lr,hr)
+
             sr = self.model(lr, scale)
             sr = utility.quantize(sr, self.args.rgb_range)
             loss = self.loss(sr, hr)
@@ -322,4 +323,4 @@ class Trainer():
         lr = lr.to(device)
         hr = hr.to(device)
 
-        return lr, hr 
+        return lr, hr  
