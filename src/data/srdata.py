@@ -53,7 +53,7 @@ class SRData(data.Dataset):
         for file in os.listdir(self.apath):
             if file.endswith('.tif'):
                 imgs.append(io.imread(os.path.join(self.apath, file)))
-            if len(imgs) > self.args.imageLim and self.args.imageLim != 0:
+            if len(imgs) >= self.args.imageLim and self.args.imageLim != 0:
                 break
 
         # fill the high res and low res
@@ -62,7 +62,7 @@ class SRData(data.Dataset):
             img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
             for j in range(4):
                 img_temp = img_split[j]
-                img_temp_down = transform.downscale_local_mean(img_temp, (6,1))
+                img_temp_down = transform.downscale_local_mean(img_temp, (int(self.args.scale),1))
                 img_temp_down = (255 * img_temp_down/img_temp_down.max()).astype('uint8')
                 hr_list.append(img_temp)
                 lr_list.append(img_temp_down)

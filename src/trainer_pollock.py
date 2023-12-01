@@ -49,11 +49,11 @@ class Trainer():
 
         # Get the training data
         self.loaderTot.dataset.set_as_training()
-        for i in self.trainInd // self.args.batch_size:
+        for i in range(self.trainInd.shape[0] // self.args.batch_size):
             lr_batch = []
             hr_batch = []
             for j in range(self.args.batch_size):
-                lr, hr = self.loaderTot.dataset[i*self.args.batch_size+j]
+                lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
                 lr_batch.append(lr)
                 hr_batch.append(hr)
             lr_stack = torch.stack(lr_batch)
@@ -62,8 +62,8 @@ class Trainer():
 
         # Get the testing data, but dont implement a batch size
         self.loaderTot.dataset.set_as_testing()
-        for i in self.testInd // self.args.batch_size:
-            lr, hr = self.loaderTot.dataset[i]
+        for i in range(self.testInd.shape[0]):
+            lr, hr = self.loaderTot.dataset[self.testInd[i]]
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
             test_files.append((lr,hr))
@@ -72,6 +72,7 @@ class Trainer():
         self.testTot = test_files
 
         self.train()
+        return
         self.test()
 
 # training and validation log output
@@ -151,11 +152,16 @@ class Trainer():
             
             self.epoch_averages_train.append(self.loss.get_last_loss())
             self.loss.end_log(len(train_data))
+            # what we want 
             self.error_last = self.loss.log[-1, -1]
             
             # will be one point on the graph of total
             self.validate_train(validation_data, len(train_data), epoch)
+            loss_to_save = np.around(np.vstack((self.epoch_averages_train, self.epoch_averages_validation)).T, 4)
+            header = "Train,Validation"
+            np.savetxt(os.path.join(self.args.loss_path, f'loss.csv'), loss_to_save, delimiter=",", header=header, fmt="%.4f")
         
+        # update the csv/txt file with the average loss for each epoch
         # Training finished
         # save the graph of the total epochs 
         fig = plt.figure()
@@ -202,6 +208,7 @@ class Trainer():
 
                 sr = self.model(lr, 0)
                 loss = self.loss(sr, hr)
+                print(loss)
 
                 # logging the validation
                 self.checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
@@ -211,7 +218,7 @@ class Trainer():
                     timer_model.release(),
                     timer_data.release()
                 ))
-                self.validateLoss.append(self.loss.get_last_loss())
+                self.validateLoss.append(loss)
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
 
@@ -254,6 +261,7 @@ class Trainer():
         # if loading in pretrained model, set pre_train to model path
         modelPath = os.path.join(self.args.dir_data, 'model')
         self.model.load(modelPath)
+        print("Model Loaded: ", modelPath)
 
         torch.set_grad_enabled(False)
 
@@ -261,7 +269,7 @@ class Trainer():
         self.model.eval()
 
         self.ckp.write_log('\nEvaluation:')
-        
+
         #self.ckp.add_log(
         #    torch.zeros(1, len(self.testTot), len(self.scale))
         #)
@@ -279,7 +287,7 @@ class Trainer():
             lr, hr = self.prepare(lr,hr)
 
             sr = self.model(lr, scale)
-            sr = utility.quantize(sr, self.args.rgb_range)
+            #sr = utility.quantize(sr, self.args.rgb_range)
             loss = self.loss(sr, hr)
             test_lossList.append(loss) 
 
@@ -289,10 +297,6 @@ class Trainer():
             #self.ckp.log[-1, idx_data] += utility.calc_psnr(
             #    sr, hr, scale, self.args.rgb_range
             #)
-
-            # this adds the low resolution and high resolution images to the list
-            if self.args.save_gt:
-                save_list.extend([lr, hr])
 
             # saves the results in the designated folders
             if self.args.save_results:
