@@ -14,7 +14,6 @@ class Model(nn.Module):
         self.args = args
         self.scale = args.scale
         self.idx_scale = 0
-        self.self_ensemble = args.self_ensemble
         self.chop = args.chop
         self.precision = args.precision
         self.cpu = args.cpu
@@ -60,10 +59,7 @@ class Model(nn.Module):
             else:
                 forward_function = self.model.forward
 
-            if self.self_ensemble:
-                return self.forward_x8(x, forward_function=forward_function)
-            else:
-                return forward_function(x)
+            return forward_function(x)
 
     # use this to save the model
     def save(self, apath, epoch, is_best=False):
