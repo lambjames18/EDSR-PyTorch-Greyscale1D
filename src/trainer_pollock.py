@@ -143,14 +143,12 @@ class Trainer():
                     
                 timer_data.tic()
 
-                #print("Loss after callin the model: ", self.loss.get_last_loss())
-
-                # loss_list.append(self.loss.get_loss())
-                pbar.set_postfix({"Loss": self.loss.get_last_loss()})
-                self.trainLoss.append(self.loss.get_last_loss())
+                # logging the training
+                pbar.set_postfix({"Loss": loss.cpu().detach().numpy()})
+                self.trainLoss.append(loss.cpu().detach().numpy())
                 #print("Train status ", batch_idx + 1, " logged")
             
-            self.epoch_averages_train.append(self.loss.get_last_loss())
+            self.epoch_averages_train.append(loss.cpu().detach().numpy())
             self.loss.end_log(len(train_data))
             # what we want 
             self.error_last = self.loss.log[-1, -1]
@@ -197,8 +195,6 @@ class Trainer():
 
         # looping through the validation 
         for batch_idx, (lr,hr) in enumerate(validate_data):
-            # lr = torch.unsqueeze(lr,0)
-            # hr = torch.unsqueeze(hr,0)
 
             lr, hr = self.prepare(lr,hr)
 
@@ -218,7 +214,7 @@ class Trainer():
                     timer_model.release(),
                     timer_data.release()
                 ))
-                self.validateLoss.append(loss)
+                self.validateLoss.append(loss.cpu().numpy())
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
 

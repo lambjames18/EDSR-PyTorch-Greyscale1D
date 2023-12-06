@@ -99,7 +99,6 @@ class checkpoint():
     def save(self, trainer, epoch):
         #trainer.model.save(self.get_path('model'), epoch)
         trainer.loss.save(self.dir)
-        trainer.loss.plot_loss(self.dir, epoch)
 
         #self.plot_psnr(epoch)
         trainer.optimizer.save(self.dir)
