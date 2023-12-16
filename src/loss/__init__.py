@@ -94,7 +94,6 @@ class Loss(nn.modules.loss._Loss):
         log = []
     
         for l, c in zip(self.loss, self.log[-1]):
-            #print(" c / n_samples: ",  c / n_samples)
             self.loss_list.append((c / n_samples).numpy())
             log.append('[{}: {:.4f}]'.format(l['type'], c / n_samples))
 

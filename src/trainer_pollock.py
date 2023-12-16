@@ -79,7 +79,6 @@ class Trainer():
     def train(self):
         self.best_validation_average = 1e8
 
-        self.ckp.write_log('\nTraining:')
         # loop over 2 epochs
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
@@ -93,11 +92,6 @@ class Trainer():
             self.loss.step()
             # getting the learning rate 
             lr_rate = self.optimizer.get_lr()
-
-            # writing to the text file
-            self.ckp.write_log(
-                '[Epoch {}]\tLearning rate: {:.2e}'.format(epoch, Decimal(lr_rate))
-            )
 
             # initialization of loss log
             self.loss.start_log()
@@ -132,14 +126,6 @@ class Trainer():
             
                 self.optimizer.step()
                 timer_model.hold()
-
-                
-                self.ckp.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
-                    (batch_idx + 1) * self.args.batch_size,
-                    len(train_data),
-                    self.loss.display_loss(batch_idx),
-                    timer_model.release(),
-                    timer_data.release()))
                     
                 timer_data.tic()
 
@@ -183,11 +169,6 @@ class Trainer():
         print("Validation Loss Log started")
         self.validateLoss = []
 
-        self.ckp.write_log('\nValidation:')
-        self.ckp.add_log(
-            torch.zeros(1, len(validate_data), len(self.scale))
-        )
-
         # the weights wont be updated 
         self.model.eval()
 
@@ -204,16 +185,7 @@ class Trainer():
 
                 sr = self.model(lr, 0)
                 loss = self.loss(sr, hr)
-                print(loss)
 
-                # logging the validation
-                self.checkpoint.write_log('[{}/{}]\t{}\t{:.1f}+{:.1f}s'.format(
-                    (batch_idx+1),
-                    len(validate_data),
-                    self.loss.display_loss(batch_idx),
-                    timer_model.release(),
-                    timer_data.release()
-                ))
                 self.validateLoss.append(loss.cpu().numpy())
 
         self.loss.end_log(len(validate_data))  # End loss logging for validation
@@ -237,7 +209,7 @@ class Trainer():
             plt.savefig(os.path.join(self.args.loss_path, f'Epoch_{epoch}.pdf'))
             plt.close(fig)
 
-            # save the model checkpoint
+            # save the model 
             self.model.save(self.args.dir_data, epoch)
 
         # check for best model
@@ -251,8 +223,6 @@ class Trainer():
     def test(self):
         print("Testing starting...")
 
-        self.ckp.write_log('\nTesting:')
-
         # load in the best model
         # if loading in pretrained model, set pre_train to model path
         modelPath = os.path.join(self.args.dir_data, 'model')
@@ -263,12 +233,6 @@ class Trainer():
 
         epoch = self.optimizer.get_last_epoch()
         self.model.eval()
-
-        self.ckp.write_log('\nEvaluation:')
-
-        #self.ckp.add_log(
-        #    torch.zeros(1, len(self.testTot), len(self.scale))
-        #)
 
         timer_test = utility.timer()
 
@@ -288,29 +252,17 @@ class Trainer():
             test_lossList.append(loss) 
 
             save_list = [sr,lr,hr]
-            
-            # logging the psnr for one image
-            #self.ckp.log[-1, idx_data] += utility.calc_psnr(
-            #    sr, hr, scale, self.args.rgb_range
-            #)
 
             # saves the results in the designated folders
             if self.args.save_results:
                 self.ckp.save_results(save_list, idx_data, loss)
-            
-        #self.ckp.write_log('Saving...')
 
         # saves the model, loss, and the pnsr model
         if not self.args.test_only:
             self.ckp.save(self, epoch)
 
-        #self.ckp.write_log(
-        #    'Total: {:.2f}s\n'.format(timer_test.toc()), refresh=True
-        #)
-
         torch.set_grad_enabled(True)
 
-        
 
     def prepare(self, lr, hr):
          # defining the device without the parallel processing in the given function
