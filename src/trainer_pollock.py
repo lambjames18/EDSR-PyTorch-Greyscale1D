@@ -72,7 +72,6 @@ class Trainer():
         self.testTot = test_files
 
         self.train()
-        return
         self.test()
 
 # training and validation log output
@@ -238,7 +237,7 @@ class Trainer():
 
         test_data = self.testTot
         # only taking the first 2 training images for now 
-        pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
@@ -246,20 +245,24 @@ class Trainer():
         for idx_data, (lr, hr) in enumerate(pbar): 
             lr, hr = self.prepare(lr,hr)
 
-            sr = self.model(lr, scale)
-            #sr = utility.quantize(sr, self.args.rgb_range)
-            loss = self.loss(sr, hr)
-            test_lossList.append(loss) 
+            # split the images into 4 and test on each of them
+            hrList, lrList = self.ckp.test_split(hr, lr)
 
-            save_list = [sr,lr,hr]
+            for i in range(4):
+                sr = self.model(lrList[i], scale)
+                #sr = utility.quantize(sr, self.args.rgb_range)
+                loss = self.loss(sr, hrList[i])
+                test_lossList.append(loss) 
 
-            # saves the results in the designated folders
-            if self.args.save_results:
-                self.ckp.save_results(save_list, idx_data, loss)
+                save_list = [sr,lr,hr]
+
+                # saves the results in the designated folders
+                if self.args.save_results:
+                    self.ckp.save_results(save_list, idx_data, loss, i+1)
 
         # saves the model, loss, and the pnsr model
-        if not self.args.test_only:
-            self.ckp.save(self, epoch)
+        #if not self.args.test_only:
+        #    self.ckp.save(self, epoch)
 
         torch.set_grad_enabled(True)
 
