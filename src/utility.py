@@ -152,31 +152,30 @@ class checkpoint():
         while not self.queue.empty(): time.sleep(1)
         for p in self.process: p.join()
 
-    def save_results(self, save_list, index, loss, quadrant):
-        if self.args.save_results:
-            # save list format: sr, lr, hr
-            postfix = ('SR', 'LR', 'HR')
+    def save_results(self, save_list, index, loss):
+        # save list format: sr, lr, hr
+        postfix = ('SR', 'LR', 'HR')
 
-            for i in postfix:
-                path = os.path.join(self.args.dir_data, 'test', i)
-                os.makedirs(path, exist_ok = True)
+        for i in postfix:
+            path = os.path.join(self.args.dir_data, 'test', i)
+            os.makedirs(path, exist_ok = True)
+        
+        
+        postfix = ('SR', 'LR', 'HR')
+        for v, p in zip(save_list, postfix):
             
+            filename = 'results-{}'.format(index)
             
-            postfix = ('SR', 'LR', 'HR')
-            for v, p in zip(save_list, postfix):
-                
-                filename = 'results-{}{}'.format(index, quadrant)
-                
-                if p == 'SR': 
-                    filename += '_loss-{}'.format(np.round(loss.cpu(),3))
+            if p == 'SR': 
+                filename += '_loss-{}'.format(np.round(loss.cpu(),3))
 
-                normalized = v[0].mul(255 / self.args.rgb_range)
+            normalized = v[0].mul(255 / self.args.rgb_range)
 
-                image_array = np.squeeze(normalized.cpu().numpy())
+            image_array = np.squeeze(normalized.cpu().numpy())
 
-                # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-                io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
-                #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
+            # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
+            io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
+            #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
 
     # split the high and low res images into 4 to make them smaller
     def test_split(self, hr, lr):
