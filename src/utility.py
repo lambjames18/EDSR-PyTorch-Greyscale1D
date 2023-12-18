@@ -166,8 +166,10 @@ class checkpoint():
 
                 filename = 'results-{}{}'.format(index, quadrant)
 
+                # stitch the list of sr together
                 if p == 'SR': 
                     filename += '_loss-{}'.format(np.round(loss.cpu(),3))
+                    
 
                 normalized = v[0].mul(255 / self.args.rgb_range)
 

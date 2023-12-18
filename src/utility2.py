@@ -39,8 +39,11 @@ class log():
 
                 io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
 
-    # split the high and low res images into 4 to make them smaller
-    def test_split(hr, lr):
-        hr_split = [hr[:2000, :2000], hr[:2000, 2000:4000], hr[2000:4000, :2000], hr[2000:4000, 2000:4000]]
-        lr_split = [lr[:2000, :2000], lr[:2000, 2000:4000], lr[2000:4000, :2000], lr[2000:4000, 2000:4000]]
+     # split the high and low res images into 4 to make them smaller
+    def test_split(self, hr, lr):
+        scale = int(self.args.scale)
+        test = hr[:, :, :1000, :1000]
+        hr_split = [hr[:, :, :1000, :1000], hr[:, :, :1000, 1000:2000], hr[:, :, 1000:2000, :1000], hr[:, :, 1000:2000, 1000:2000]]
+        lowResLim = (2000//scale)//2
+        lr_split = [lr[:, :, :lowResLim, :1000], lr[:, :, :lowResLim, 1000:2000], lr[:, :, lowResLim:2000, :1000], lr[:, :, lowResLim:2000, 1000:2000]]
         return hr_split, lr_split

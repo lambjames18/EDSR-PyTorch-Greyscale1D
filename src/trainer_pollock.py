@@ -248,17 +248,23 @@ class Trainer():
             # split the images into 4 and test on each of them
             hrList, lrList = self.ckp.test_split(hr, lr)
 
+            # srList has each of the 4 images 
+            # will stitch back together for saving as full image
+            sr_list = []
+            testLostTot = []
+
             for i in range(4):
                 sr = self.model(lrList[i], scale)
-                #sr = utility.quantize(sr, self.args.rgb_range)
+                sr_list.append(sr)
                 loss = self.loss(sr, hrList[i])
-                test_lossList.append(loss) 
+                testLostTot.append(loss) 
 
-                save_list = [sr,lr,hr]
+            test_lossList.append(np.average(testLostTot))
+            save_list = [sr_list,lr,hr]
 
-                # saves the results in the designated folders
-                if self.args.save_results:
-                    self.ckp.save_results(save_list, idx_data, loss, i+1)
+            # saves the results in the designated folders
+            if self.args.save_results:
+                self.ckp.save_results(save_list, idx_data, loss, i+1)
 
         # saves the model, loss, and the pnsr model
         #if not self.args.test_only:
