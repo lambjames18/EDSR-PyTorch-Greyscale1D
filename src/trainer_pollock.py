@@ -251,20 +251,23 @@ class Trainer():
             # srList has each of the 4 images 
             # will stitch back together for saving as full image
             sr_list = []
-            testLostTot = []
+            testLossTot = []
 
             for i in range(4):
                 sr = self.model(lrList[i], scale)
                 sr_list.append(sr)
                 loss = self.loss(sr, hrList[i])
-                testLostTot.append(loss) 
+                testLossTot.append(loss) 
 
-            test_lossList.append(np.average(testLostTot))
-            save_list = [sr_list,lr,hr]
+            # combine the sr list back into 1 before adding to savelist
+            srConcate = sr_concatenated = torch.cat(sr_list, dim=2)
+
+            test_lossList.append(np.average(testLossTot))
+            save_list = [srConcate,lr,hr]
 
             # saves the results in the designated folders
             if self.args.save_results:
-                self.ckp.save_results(save_list, idx_data, loss, i+1)
+                self.ckp.save_results(save_list, idx_data, loss)
 
         # saves the model, loss, and the pnsr model
         #if not self.args.test_only:
