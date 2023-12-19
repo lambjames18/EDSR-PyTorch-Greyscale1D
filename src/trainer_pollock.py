@@ -4,6 +4,7 @@ import utility
 import torch
 import torch.nn.utils as utils
 import numpy as np
+import torch.nn.functional as F
 
 import matplotlib
 matplotlib.use('Agg')
@@ -262,6 +263,8 @@ class Trainer():
             # combine the sr list back into 1 before adding to savelist
             #srConcate = torch.cat(sr_list, dim=2)
             srConcate = torch.cat([torch.cat(sr_list[:2], dim=3), torch.cat(sr_list[2:], dim=3)], dim=2)
+            # Resize the concatenated HR image to the original size
+            srConcate = F.interpolate(srConcate, size=(hr.size(2), hr.size(3)), mode='bicubic', align_corners=False)
             
             losses = [loss.cpu().numpy() for loss in testLossTot]
             test_lossList.append(np.average(losses))
