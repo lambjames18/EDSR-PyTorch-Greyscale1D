@@ -260,7 +260,8 @@ class Trainer():
                 testLossTot.append(loss) 
 
             # combine the sr list back into 1 before adding to savelist
-            srConcate = torch.cat(sr_list, dim=2)
+            #srConcate = torch.cat(sr_list, dim=2)
+            srConcate = torch.cat([torch.cat(sr_list[:2], dim=3), torch.cat(sr_list[2:], dim=3)], dim=2)
             
             losses = [loss.cpu().numpy() for loss in testLossTot]
             test_lossList.append(np.average(losses))
