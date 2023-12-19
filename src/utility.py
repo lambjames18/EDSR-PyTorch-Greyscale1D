@@ -152,7 +152,7 @@ class checkpoint():
         while not self.queue.empty(): time.sleep(1)
         for p in self.process: p.join()
 
-    def save_results(self, save_list, index, loss, quadrant):
+    def save_results(self, save_list, index, loss):
         if self.args.save_results:
             # save list format: sr, lr, hr
             postfix = ('SR', 'LR', 'HR')
@@ -165,7 +165,7 @@ class checkpoint():
             postfix = ('SR', 'LR', 'HR')
             for v, p in zip(save_list, postfix):
                 
-                filename = 'results-{}{}'.format(index, quadrant)
+                filename = 'results-{}'.format(index)
                 
                 if p == 'SR': 
                     filename += '_loss-{}'.format(np.round(loss.cpu(),3))
