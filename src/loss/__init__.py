@@ -71,6 +71,33 @@ class Loss(nn.modules.loss._Loss):
         #print("Loss sum: ", loss_sum)
 
         return loss_sum
+    
+    # will plot the loss for each epoch, as well as the total
+    def saveLoss(self, epoch, loss_path, trainLoss, validateLoss = [], isTot = False, trainlength = 0):
+        fig = plt.figure()
+
+        # if it is the totalLoss, plot both training and validation
+        # if not, just plot the training loss
+        if isTot:
+            plt.title(f"Total epochs")
+            fileName = 'totalLoss.pdf'
+            xLabel = 'Epochs'
+            xRange =  np.arange(epoch) + 1
+        else:
+            plt.title(f"Loss Function epoch {epoch}")
+            fileName = 'Epoch_{}.pdf'.format(epoch)
+            xLabel = 'Batches'
+            xRange = np.arange(0, trainlength)
+
+        plt.plot(xRange, trainLoss, marker = 'o', color = 'blue', label = "Training")
+        if isTot:
+            plt.plot(xRange, validateLoss, marker = 'o', color = 'red', label = "Validation")
+        plt.legend()
+        plt.xlabel(xLabel)
+        plt.ylabel('Loss')
+        plt.grid(True)
+        plt.savefig(os.path.join(loss_path, fileName))
+        plt.close(fig)
 
     def step(self):
         for l in self.get_loss_module():

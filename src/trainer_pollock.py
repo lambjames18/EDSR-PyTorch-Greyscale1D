@@ -37,8 +37,8 @@ class Trainer():
         self.checkpoint = utility.checkpoint(self.args)
         self.idx_scale = 0
         self.epoch_limit = epoch_limit
-        self.epoch_averages_validation = []
-        self.epoch_averages_train = []
+        self.epoch_validationLoss = []
+        self.epoch_trainLoss = []
 
         self.error_last = 1e8
     
@@ -79,7 +79,6 @@ class Trainer():
     def train(self):
         self.best_validation_average = 1e8
 
-        # loop over 2 epochs
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
             # after validating in the validation function, shuffles and takes another 
@@ -132,42 +131,38 @@ class Trainer():
                 # logging the training
                 pbar.set_postfix({"Loss": loss.cpu().detach().numpy()})
                 self.trainLoss.append(loss.cpu().detach().numpy())
-                #print("Train status ", batch_idx + 1, " logged")
             
-            self.epoch_averages_train.append(loss.cpu().detach().numpy())
-            self.loss.end_log(len(train_data))
+            self.epoch_trainLoss.append(loss.cpu().detach().numpy())
+            # self.loss.end_log(len(train_data))
             # what we want 
             self.error_last = self.loss.log[-1, -1]
+
+            # first instance of saving the loss
+            self.loss_path = os.path.join(self.args.dir_data, 'loss')
+            os.makedirs(self.loss_path, exist_ok=True)
             
             # will be one point on the graph of total
             self.validate_train(validation_data, len(train_data), epoch)
-            loss_to_save = np.around(np.vstack((self.epoch_averages_train, self.epoch_averages_validation)).T, 4)
+
+            loss_to_save = np.around(np.vstack((self.epoch_trainLoss, self.epoch_validationLoss)).T, 4)
             header = "Train,Validation"
-            np.savetxt(os.path.join(self.args.loss_path, f'loss.csv'), loss_to_save, delimiter=",", header=header, fmt="%.4f")
+
+            np.savetxt(os.path.join(self.loss_path, f'lossLog.csv'), loss_to_save, delimiter=",", header=header, fmt="%.4f")
         
         # update the csv/txt file with the average loss for each epoch
         # Training finished
         # save the graph of the total epochs 
-        fig = plt.figure()
-        plt.title(f"Total epochs")
-        epoch_range = np.arange(self.epoch_limit) + 1
-        plt.plot(epoch_range, self.epoch_averages_validation, marker = 'o', color = 'red', label = "Validation")
-        plt.plot(epoch_range, self.epoch_averages_train, marker = 'o', color = 'blue', label = "Training")
-        plt.legend()
-        plt.xlabel('Epochs')
-        plt.ylabel('Loss')
-        plt.grid(True)
-        plt.savefig(os.path.join(self.args.loss_path, f'totalLoss.pdf'))
-        plt.close(fig)
+            
+        self.loss.saveLoss(self.epoch_limit, self.loss_path, self.epoch_trainLoss, self.epoch_validationLoss, True)
 
     # validation in the training
     def validate_train(self, validate_data, trainlength, epoch):
         torch.set_grad_enabled(False)
 
         # complete validation on the 10%
-        self.loss.start_log()
+        # self.loss.start_log()
         print("Validation Loss Log started")
-        self.validateLoss = []
+        self.validateLossTot = []
 
         # the weights wont be updated 
         self.model.eval()
@@ -186,35 +181,29 @@ class Trainer():
                 sr = self.model(lr, 0)
                 loss = self.loss(sr, hr)
 
-                self.validateLoss.append(loss.cpu().numpy())
+                self.validateLossTot.append(loss.cpu().numpy())
 
-        self.loss.end_log(len(validate_data))  # End loss logging for validation
+        # self.loss.end_log(len(validate_data))  # End loss logging for validation
 
         # saves training loss for epoch graph
         x_trainLoss = np.arange(0, trainlength)
         y_trainLoss = self.trainLoss
 
         # adding the average 
-        self.epoch_averages_validation.append(np.average(self.validateLoss))
+        self.epoch_validationLoss.append(np.average(self.validateLossTot))
+
+        
 
         # Plot for one epoch, plotting one every 10, as well as the first one
         # will also save the model 
         if((epoch) % self.args.print_every == 0) or (epoch == 1):
-            fig = plt.figure()
-            plt.plot(x_trainLoss, y_trainLoss, marker = 'o', color = 'red')
-            plt.title(f"Loss Function epoch {epoch}")
-            plt.xlabel('Batches')
-            plt.ylabel('Loss')
-            plt.grid(True)
-            plt.savefig(os.path.join(self.args.loss_path, f'Epoch_{epoch}.pdf'))
-            plt.close(fig)
-
+            self.loss.saveLoss(epoch, self.loss_path, self.trainLoss, self.validateLossTot, False, trainlength)
             # save the model 
             self.model.save(self.args.dir_data, epoch)
 
         # check for best model
-        if self.epoch_averages_validation[-1] < self.best_validation_average:
-            self.best_average = self.epoch_averages_validation[-1]
+        if self.epoch_validationLoss[-1] < self.best_validation_average:
+            self.best_average = self.epoch_validationLoss[-1]
             self.model.save(self.args.dir_data, epoch, is_best=True)
 
 
@@ -264,7 +253,7 @@ class Trainer():
             #srConcate = torch.cat(sr_list, dim=2)
             srConcate = torch.cat([torch.cat(sr_list[:2], dim=3), torch.cat(sr_list[2:], dim=3)], dim=2)
             # Resize the concatenated HR image to the original size
-            srConcate = F.interpolate(srConcate, size=(hr.size(2), hr.size(3)), mode='bicubic', align_corners=False)
+            srConcate = F.interpolate(srConcate, size=(hr.size(2), hr.size(3)), mode='bicubic', align_corners=True)
             
             losses = [loss.cpu().numpy() for loss in testLossTot]
             test_lossList.append(np.average(losses))
