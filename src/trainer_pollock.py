@@ -107,6 +107,7 @@ class Trainer():
             timer_data, timer_model = utility.timer(), utility.timer()
             print("Timer set")
 
+            # potentially write this to a txt file
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
             for batch_idx, (lr, hr) in enumerate(pbar):
                 #lr = torch.unsqueeze(lr,0)
@@ -183,22 +184,13 @@ class Trainer():
 
                 self.validateLossTot.append(loss.cpu().numpy())
 
-        # self.loss.end_log(len(validate_data))  # End loss logging for validation
-
-        # saves training loss for epoch graph
-        x_trainLoss = np.arange(0, trainlength)
-        y_trainLoss = self.trainLoss
-
         # adding the average 
         self.epoch_validationLoss.append(np.average(self.validateLossTot))
-
-        
 
         # Plot for one epoch, plotting one every 10, as well as the first one
         # will also save the model 
         if((epoch) % self.args.print_every == 0) or (epoch == 1):
             self.loss.saveLoss(epoch, self.loss_path, self.trainLoss, self.validateLossTot, False, trainlength)
-            # save the model 
             self.model.save(self.args.dir_data, epoch)
 
         # check for best model
@@ -220,7 +212,7 @@ class Trainer():
 
         torch.set_grad_enabled(False)
 
-        epoch = self.optimizer.get_last_epoch()
+        #epoch = self.optimizer.get_last_epoch()
         self.model.eval()
 
         timer_test = utility.timer()
@@ -263,6 +255,15 @@ class Trainer():
             if self.args.save_results:
                 self.ckp.save_results(save_list, idx_data, loss)
 
+            # write results to a text file: loss for each image
+            # loss for each image
+        
+        saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, timer_test)).T, 4)
+        header = "Test Loss, Batch Size, Time Taken"
+        # save the average loss for all of the test images
+        # script in test folder with average loss, batch size, and time taken for testing 
+        np.savetxt(os.path.join(self.args.dir_data, 'test', f'results.csv'), saveTest, delimiter=",", header=header, fmt="%.4f")
+        
         # saves the model, loss, and the pnsr model
         #if not self.args.test_only:
         #    self.ckp.save(self, epoch)
