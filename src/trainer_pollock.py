@@ -258,7 +258,8 @@ class Trainer():
             # write results to a text file: loss for each image
             # loss for each image
         
-        saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, timer_test)).T, 4)
+        elapsed_time = timer_test.toc()
+        saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
         header = "Test Loss, Batch Size, Time Taken"
         # save the average loss for all of the test images
         # script in test folder with average loss, batch size, and time taken for testing 
