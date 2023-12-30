@@ -30,7 +30,7 @@ print()
 params = {}
 command = ""
 
-print("Enter parameters one at a time below, enter 'RUN' to run the program. Refer to option_mod for options and their defaults")
+print("Enter parameters one at a time below, enter 'run' to run the program. Refer to option_mod for options and their defaults")
 print("Required: path to images , Recommended: Batch Size, Scale, ")
 print("Format example -> batch size, 4")
 
@@ -40,7 +40,7 @@ while True:
     command = input("Insert: ")
     print()
 
-    if command == "RUN": 
+    if command == "run": 
         break
     
     command_split = command.split(",")
@@ -48,8 +48,8 @@ while True:
     if len(command_split) != 2:
         print("This input is invalid. Please try again")
         continue
-
-    name = command_split[0]
+    
+    name = "--" + command_split[0].replace(" ", "_")
     value = command_split[1]
 
     params[name] = value
