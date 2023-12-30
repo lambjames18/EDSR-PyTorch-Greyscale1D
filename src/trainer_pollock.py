@@ -5,7 +5,7 @@ import torch
 import torch.nn.utils as utils
 import numpy as np
 import torch.nn.functional as F
-from torch import transforms
+from torchvision import transforms
 
 import matplotlib
 matplotlib.use('Agg')
@@ -51,7 +51,7 @@ class Trainer():
         # Get the training data
         self.loaderTot.dataset.set_as_training()
 
-        normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        normalize = transforms.Normalize(mean=[0.5], std=[0.5])
 
         for i in range(self.trainInd.shape[0] // self.args.batch_size):
             lr_batch = []
