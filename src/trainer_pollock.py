@@ -211,8 +211,6 @@ class Trainer():
         print("Model Loaded: ", modelPath)
 
         torch.set_grad_enabled(False)
-
-        #epoch = self.optimizer.get_last_epoch()
         self.model.eval()
 
         timer_test = utility.timer()
@@ -254,9 +252,6 @@ class Trainer():
             # saves the results in the designated folders
             if self.args.save_results:
                 self.ckp.save_results(save_list, idx_data, loss)
-
-            # write results to a text file: loss for each image
-            # loss for each image
         
         elapsed_time = timer_test.toc()
         saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
@@ -266,15 +261,10 @@ class Trainer():
 
         # Check if the file already exists
         if os.path.exists(results_file_path):
-            # Open the file in append mode
             with open(results_file_path, 'a') as file:
-                # Append the new data to the file
-                np.savetxt(file, [saveTest], delimiter=",", fmt="%.4f")
+                np.savetxt(file, saveTest, delimiter=",", fmt="%.4f")
         else:
-            # If the file doesn't exist, create a new one and write the header
-            np.savetxt(results_file_path, [saveTest], delimiter=",", header=header, comments='', fmt="%.4f")
-
-        #np.savetxt(os.path.join(self.args.dir_data, 'test', f'results.csv'), saveTest, delimiter=",", header=header, fmt="%.4f")
+            np.savetxt(results_file_path, saveTest, delimiter=",", header=header, comments='', fmt="%.4f")
         
         # saves the model, loss, and the pnsr model
         #if not self.args.test_only:

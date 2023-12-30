@@ -1,20 +1,28 @@
 import os
+import time
 import numpy as np
 from skimage import io
 
-# new class
-# For Loss: 
-#    - plots the loss
-#    - logs the loss for training and validation 
-# For Model:
-#    - saves the model
+
+# tracks how long the training and testing take
+class timer():
+    def __init__(self):
+        self.acc = 0
+        self.tic()
+
+    def tic(self):
+        self.t0 = time.time()
+
+    def toc(self, restart=False):
+        diff = time.time() - self.t0
+        if restart: self.t0 = time.time()
+        return diff
 
 class log():
     def __init__(self, args):
         # create the log file 
         self.args = args
     
-
     # saves the images to the test folder
     def save_results(self, save_list, index, loss):
         if self.args.save_results:
@@ -39,7 +47,7 @@ class log():
 
                 io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
 
-     # split the high and low res images into 4 to make them smaller
+    # split the high and low res images into 4 to make them smaller
     def test_split(self, hr, lr):
         scale = int(self.args.scale)
         test = hr[:, :, :1000, :1000]
@@ -47,3 +55,4 @@ class log():
         lowResLim = (2000//scale)//2
         lr_split = [lr[:, :, :lowResLim, :1000], lr[:, :, :lowResLim, 1000:2000], lr[:, :, lowResLim:2000, :1000], lr[:, :, lowResLim:2000, 1000:2000]]
         return hr_split, lr_split
+    
