@@ -5,12 +5,12 @@ import torch
 import torch.nn.utils as utils
 import numpy as np
 import torch.nn.functional as F
+from torch import transforms
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from sklearn.model_selection import KFold
 from data import common
 import numpy as np
 from decimal import Decimal
@@ -50,11 +50,18 @@ class Trainer():
 
         # Get the training data
         self.loaderTot.dataset.set_as_training()
+
+        normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
         for i in range(self.trainInd.shape[0] // self.args.batch_size):
             lr_batch = []
             hr_batch = []
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
+
+                lr = normalize(lr)
+                hr = normalize(hr)
+
                 lr_batch.append(lr)
                 hr_batch.append(hr)
             lr_stack = torch.stack(lr_batch)
