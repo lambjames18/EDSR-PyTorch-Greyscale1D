@@ -101,7 +101,10 @@ class Trainer():
             # train at the end of the validation
             torch.set_grad_enabled(True)
             self.model.train()  # Set the model back to training mode
-            self.optimizer.schedule()
+            
+            # test
+            #self.optimizer.schedule()
+            
             print("Model to train reached")
 
             timer_data, timer_model = utility.timer(), utility.timer()
