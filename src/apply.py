@@ -26,20 +26,33 @@ print("Welcome to the SR program!")
 print("This program will allow you to run SR on your data with parameters of your choice")
 print()
 
-params = []
+# dictionary: {name, param}
+params = {}
+command = ""
 
-print("Enter parameters below, D for default")
-scale = input("Scale (default - 4): ")
-batch = input("Batch Size (default - 4): ")
-epoch = input("Epochs Run (default - 15): ")
-split = input("Kfold split (default - 5): ")
-path = input("Path to your greyscale images (required): ")
+print("Enter parameters one at a time below, enter 'RUN' to run the program. Refer to option_mod for options and their defaults")
+print("Required: path to images , Recommended: Batch Size, Scale, ")
+print("Format example -> batch size, 4")
 
-print("Are there any other parameters you would like to set? (Refer to the option_mod file for options)")
-rest_args = input("Format Example -> '--scale,4' : ")
 
-args = option_mod.parser.parse_args('''Enter the arguements''')
+while True:
+    print("Current Arguements: ", params)
+    command = input("Insert: ")
+    print()
 
-def parseArgs(input):
-    print("Parsing arg: ", input)
+    if command == "RUN": 
+        break
     
+    command_split = command.split(",")
+
+    if len(command_split) != 2:
+        print("This input is invalid. Please try again")
+        continue
+
+    name = command_split[0]
+    value = command_split[1]
+
+    params[name] = value
+
+    
+
