@@ -82,6 +82,8 @@ parser.add_argument('--split_batch', type=int, default=1,
                     help='split the batch into smaller chunks')
 parser.add_argument('--test_only', action='store_true',
                     help='set this option to test the model')
+parser.add_argument('--k_fold', type=int, default=5,
+                    help = 'k fold number of splits')
 
 # Optimization specifications
 parser.add_argument('--lr', type=float, default=1e-4,
