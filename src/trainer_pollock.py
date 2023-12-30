@@ -261,9 +261,20 @@ class Trainer():
         elapsed_time = timer_test.toc()
         saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
         header = "Test Loss, Batch Size, Time Taken"
-        # save the average loss for all of the test images
-        # script in test folder with average loss, batch size, and time taken for testing 
-        np.savetxt(os.path.join(self.args.dir_data, 'test', f'results.csv'), saveTest, delimiter=",", header=header, fmt="%.4f")
+
+        results_file_path = os.path.join(self.args.dir_data, 'test', f'results.csv')
+
+        # Check if the file already exists
+        if os.path.exists(results_file_path):
+            # Open the file in append mode
+            with open(results_file_path, 'a') as file:
+                # Append the new data to the file
+                np.savetxt(file, [saveTest], delimiter=",", fmt="%.4f")
+        else:
+            # If the file doesn't exist, create a new one and write the header
+            np.savetxt(results_file_path, [saveTest], delimiter=",", header=header, comments='', fmt="%.4f")
+
+        #np.savetxt(os.path.join(self.args.dir_data, 'test', f'results.csv'), saveTest, delimiter=",", header=header, fmt="%.4f")
         
         # saves the model, loss, and the pnsr model
         #if not self.args.test_only:

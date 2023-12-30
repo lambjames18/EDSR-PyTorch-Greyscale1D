@@ -60,7 +60,7 @@ while True:
         print("This input is invalid. Please try again")
         continue
     
-    name = command_split[0].strip()
+    name = command_split[0].strip().replace(" ", "_")
     value = command_split[1].strip()
 
     params[name] = value
@@ -68,7 +68,7 @@ while True:
 argsTot = []
 
 for name in params:
-    argsTot.append("--" + name.replace(" ", "_"))
+    argsTot.append(f"--{name}")
     argsTot.append(params[name])
 
 # parsing the arguements
