@@ -75,6 +75,10 @@ class Trainer():
             lr, hr = self.loaderTot.dataset[self.testInd[i]]
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
+
+            lr = normalize(lr)
+            hr = normalize(hr)
+            
             test_files.append((lr,hr))
         
         self.trainTot = train_files
