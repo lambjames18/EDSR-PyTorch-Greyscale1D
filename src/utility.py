@@ -92,8 +92,8 @@ class checkpoint():
         # changed from 8 to 1
         self.n_processes = 1
 
-    def get_path(self, *subdir):
-        return os.path.join(self.dir, *subdir)
+    #def get_path(self, *subdir):
+    #    return os.path.join(self.dir, *subdir)
     
     # change this so that the average loss is plotted
     def save(self, trainer, epoch):
@@ -103,7 +103,7 @@ class checkpoint():
         trainer.optimizer.save(self.dir)
         torch.save(self.log, self.get_path('psnr_log.pt'))
 
-    def add_log(self, log):
+    '''def add_log(self, log):
         self.log = torch.cat([self.log, log])
 
     def write_log(self, log, refresh=False):
@@ -114,26 +114,27 @@ class checkpoint():
             self.log_file = open(self.get_path('log.txt'), 'a')
 
     def done(self):
-        self.log_file.close()
+        self.log_file.close()'''
 
-    def plot_psnr(self, epoch):
+    def plot_psnr(self, epoch, pnsrList):
         axis = np.linspace(1, epoch, epoch)
-        for idx_data, d in enumerate(self.args.data_test):
-            label = 'SR on {}'.format(d)
-            fig = plt.figure()
-            plt.title(label)
-            for idx_scale, scale in enumerate(self.args.scale):
-                plt.plot(
-                    axis,
-                    self.log[:, idx_data, idx_scale].numpy(),
-                    label='Scale {}'.format(scale)
-                )
-            plt.legend()
-            plt.xlabel('Epochs')
-            plt.ylabel('PSNR')
-            plt.grid(True)
-            plt.savefig(self.get_path('test_{}.pdf'.format(d)))
-            plt.close(fig)
+        
+        label = 'SR for epoch {}'.format(epoch)
+        fig = plt.figure()
+        plt.title(label)
+        for scale in self.args.scale:
+            plt.plot(
+                axis,
+                pnsrList,
+                label='Scale {}'.format(scale)
+            )
+        plt.legend()
+        plt.xlabel('Epochs')
+        plt.ylabel('PSNR')
+        plt.grid(True)
+        # path to test
+        plt.savefig(os.path.join(self.args.dir_data, 'test'))
+        plt.close(fig)
 
     
 
@@ -147,10 +148,10 @@ class checkpoint():
         
         for p in self.process: p.start()'''
 
-    def end_background(self):
+    '''def end_background(self):
         for _ in range(self.n_processes): self.queue.put((None, None))
         while not self.queue.empty(): time.sleep(1)
-        for p in self.process: p.join()
+        for p in self.process: p.join()'''
 
     def save_results(self, save_list, index, loss):
         if self.args.save_results:

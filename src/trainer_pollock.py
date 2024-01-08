@@ -38,6 +38,7 @@ class Trainer():
         self.idx_scale = 0
         self.epoch_limit = epoch_limit
         self.epoch_validationLoss = []
+        self.epoch_validationPSNR = []
         self.epoch_trainLoss = []
 
         self.error_last = 1e8
@@ -120,8 +121,6 @@ class Trainer():
             # potentially write this to a txt file
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
             for batch_idx, (lr, hr) in enumerate(pbar):
-                #lr = torch.unsqueeze(lr,0)
-                #hr = torch.unsqueeze(hr,0)
 
                 lr, hr = self.prepare(lr,hr)
                 timer_data.hold()
@@ -166,6 +165,7 @@ class Trainer():
             
         self.loss.saveLoss(self.epoch_limit, self.loss_path, self.epoch_trainLoss, self.epoch_validationLoss, True)
 
+
     # validation in the training
     def validate_train(self, validate_data, trainlength, epoch):
         torch.set_grad_enabled(False)
@@ -174,6 +174,7 @@ class Trainer():
         # self.loss.start_log()
         print("Validation Loss Log started")
         self.validateLossTot = []
+        self.validatePSNRtot = []
 
         # the weights wont be updated 
         self.model.eval()
@@ -191,23 +192,26 @@ class Trainer():
 
                 sr = self.model(lr, 0)
                 loss = self.loss(sr, hr)
+                psnr = self.ckp.calc_psnr(epoch)
 
+                self.validatePSNRtot.append(psnr.cpu().numpy())
                 self.validateLossTot.append(loss.cpu().numpy())
 
         # adding the average 
         self.epoch_validationLoss.append(np.average(self.validateLossTot))
+        self.epoch_validationPSNR.append(np.average(self.validatePSNRtot))
 
-        # Plot for one epoch, plotting one every 10, as well as the first one
-        # will also save the model 
+        # Plot for one epoch, plotting one for every printevery, as well as the first one
+        # will also save the model and plot psnr
         if((epoch) % self.args.print_every == 0) or (epoch == 1):
             self.loss.saveLoss(epoch, self.loss_path, self.trainLoss, self.validateLossTot, False, trainlength)
+            self.ckp.plot_psnr(epoch, self.epoch_validationPSNR)
             self.model.save(self.args.dir_data, epoch)
 
         # check for best model
         if self.epoch_validationLoss[-1] < self.best_validation_average:
             self.best_average = self.epoch_validationLoss[-1]
             self.model.save(self.args.dir_data, epoch, is_best=True)
-
 
 
     # this will both save the model and test on the test images
