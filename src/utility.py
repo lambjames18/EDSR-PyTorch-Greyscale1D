@@ -82,7 +82,9 @@ class checkpoint():
         #    os.makedirs(self.get_path('results-{}'.format(d)), exist_ok=True)
 
         open_type = 'a' if os.path.exists(self.get_path('log.txt'))else 'w'
-        self.log_file = open(self.get_path('log.txt'), open_type)
+        with open(self.get_path('log.txt'), open_type) as f:
+            f.write(now + '\n\n')
+
         with open(self.get_path('config.txt'), open_type) as f:
             f.write(now + '\n\n')
             for arg in vars(args):
@@ -92,8 +94,8 @@ class checkpoint():
         # changed from 8 to 1
         self.n_processes = 1
 
-    #def get_path(self, *subdir):
-    #    return os.path.join(self.dir, *subdir)
+    def get_path(self, *subdir):
+        return os.path.join(self.dir, *subdir)
     
     # change this so that the average loss is plotted
     def save(self, trainer, epoch):
@@ -103,7 +105,7 @@ class checkpoint():
         trainer.optimizer.save(self.dir)
         torch.save(self.log, self.get_path('psnr_log.pt'))
 
-    '''def add_log(self, log):
+    def add_log(self, log):
         self.log = torch.cat([self.log, log])
 
     def write_log(self, log, refresh=False):
@@ -114,26 +116,24 @@ class checkpoint():
             self.log_file = open(self.get_path('log.txt'), 'a')
 
     def done(self):
-        self.log_file.close()'''
+        self.log_file.close()
 
-    def plot_psnr(self, epoch, pnsrList):
-        axis = np.linspace(1, epoch, epoch)
+    def plot_psnr(self, pnsrList, epochLim):
+        axis = np.arange(0, epochLim)
         
-        label = 'SR for epoch {}'.format(epoch)
+        label = 'SR for Epochs'
         fig = plt.figure()
         plt.title(label)
-        for scale in self.args.scale:
-            plt.plot(
-                axis,
-                pnsrList,
-                label='Scale {}'.format(scale)
-            )
+        plt.plot(
+            axis,
+            pnsrList,
+            label='Scale {}'.format(self.args.scale)
+        )
         plt.legend()
         plt.xlabel('Epochs')
         plt.ylabel('PSNR')
         plt.grid(True)
-        # path to test
-        plt.savefig(os.path.join(self.args.dir_data, 'test'))
+        plt.savefig(os.path.join(self.args.dir_data, 'test', 'psnr_log.png'))
         plt.close(fig)
 
     
@@ -186,29 +186,34 @@ class checkpoint():
         lowResLim = (2000//scale)//2
         lr_split = [lr[:, :, :lowResLim, :1000], lr[:, :, :lowResLim, 1000:2000], lr[:, :, lowResLim:2000, :1000], lr[:, :, lowResLim:2000, 1000:2000]]
         return hr_split, lr_split
+    
+    # look into the conversion for greyscale
+    def calc_psnr(self, sr, hr, scale, rgb_range, dataset=None):
+        if type(scale) is not int:
+            scale = int(scale)
+
+        if hr.nelement() == 1: return 0
+
+        sr = sr.mul(255 / self.args.rgb_range)
+
+        diff = (sr - hr) / rgb_range
+        if dataset and dataset.dataset.benchmark:
+            shave = scale
+            if diff.size(1) > 1:
+                gray_coeffs = [65.738, 129.057, 25.064]
+                convert = diff.new_tensor(gray_coeffs).view(1, 3, 1, 1) / 256
+                diff = diff.mul(convert).sum(dim=1)
+        else:
+            shave = scale + 6
+
+        valid = diff[..., shave:-shave, shave:-shave]
+        mse = valid.pow(2).mean()
+
+        return -10 * math.log10(mse)
 
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
     return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
-
-# look into the conversion for greyscale
-def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
-    if hr.nelement() == 1: return 0
-
-    diff = (sr - hr) / rgb_range
-    if dataset and dataset.dataset.benchmark:
-        shave = scale
-        if diff.size(1) > 1:
-            gray_coeffs = [65.738, 129.057, 25.064]
-            convert = diff.new_tensor(gray_coeffs).view(1, 3, 1, 1) / 256
-            diff = diff.mul(convert).sum(dim=1)
-    else:
-        shave = scale + 6
-
-    valid = diff[..., shave:-shave, shave:-shave]
-    mse = valid.pow(2).mean()
-
-    return -10 * math.log10(mse)
 
 def make_optimizer(args, target):
     '''

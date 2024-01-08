@@ -6,6 +6,7 @@ import torch.nn.utils as utils
 import numpy as np
 import torch.nn.functional as F
 from torchvision import transforms
+from datetime import datetime
 
 import matplotlib
 matplotlib.use('Agg')
@@ -90,6 +91,7 @@ class Trainer():
 # training and validation log output
     def train(self):
         self.best_validation_average = 1e8
+        self.ckp.write_log('Training started')
 
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
@@ -168,6 +170,7 @@ class Trainer():
         # save the graph of the total epochs 
             
         self.loss.saveLoss(self.epoch_limit, self.loss_path, self.epoch_trainLoss, self.epoch_validationLoss, True)
+        self.loss.plot_psnr(self.epoch_limit, self.epoch_validationPSNR, len(train_data))
 
 
     # validation in the training
@@ -196,20 +199,21 @@ class Trainer():
 
                 sr = self.model(lr, 0)
                 loss = self.loss(sr, hr)
-                psnr = self.ckp.calc_psnr(epoch)
+                psnr = self.ckp.calc_psnr(sr, hr, self.args.scale, 255)
 
-                self.validatePSNRtot.append(psnr.cpu().numpy())
+                self.validatePSNRtot.append(psnr)
                 self.validateLossTot.append(loss.cpu().numpy())
 
         # adding the average 
         self.epoch_validationLoss.append(np.average(self.validateLossTot))
         self.epoch_validationPSNR.append(np.average(self.validatePSNRtot))
 
+        self.ckp.write_log(f'Epoch {epoch} -> Validation: Average Loss: {np.average(self.validateLossTot):.4f}, Average PSNR: {np.average(self.validatePSNRtot):.4f}')
+
         # Plot for one epoch, plotting one for every printevery, as well as the first one
         # will also save the model and plot psnr
         if((epoch) % self.args.print_every == 0) or (epoch == 1):
             self.loss.saveLoss(epoch, self.loss_path, self.trainLoss, self.validateLossTot, False, trainlength)
-            self.ckp.plot_psnr(epoch, self.epoch_validationPSNR)
             self.model.save(self.args.dir_data, epoch)
 
         # check for best model
