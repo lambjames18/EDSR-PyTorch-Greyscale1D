@@ -82,10 +82,10 @@ class checkpoint():
         #    os.makedirs(self.get_path('results-{}'.format(d)), exist_ok=True)
 
         open_type = 'a' if os.path.exists(self.get_path('log.txt'))else 'w'
-        self.log_file = open(self.get_path('log.txt'), open_type)
-        
-        with open(self.get_path('log.txt'), open_type) as f:
+        with open(self.get_path('log.txt'), 'a') as f:
             f.write(now + '\n\n')
+        
+        self.log_file = open(self.get_path('log.txt'), open_type)
 
         with open(self.get_path('config.txt'), open_type) as f:
             f.write(now + '\n\n')
@@ -110,7 +110,7 @@ class checkpoint():
     def add_log(self, log):
         self.log = torch.cat([self.log, log])
 
-    def write_log(self, log, refresh=False):
+    def write_log(self, log, refresh=True):
         #print(log)
         self.log_file.write(log + '\n')
         if refresh:

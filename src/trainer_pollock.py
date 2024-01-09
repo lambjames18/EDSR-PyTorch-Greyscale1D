@@ -91,7 +91,7 @@ class Trainer():
 # training and validation log output
     def train(self):
         self.best_validation_average = 1e8
-        self.ckp.write_log('Training started')
+        self.ckp.write_log('Training:')
 
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
@@ -159,6 +159,7 @@ class Trainer():
             
             # will be one point on the graph of total
             self.validate_train(validation_data, len(train_data), epoch)
+            self.ckp.write_log(f'Epoch {epoch} -> Validation Loss: {np.average(self.validateLossTot):.4f}, Training Loss: {np.average(self.epoch_trainLoss)}, PSNR: {np.average(self.validatePSNRtot):.4f}')
 
             loss_to_save = np.around(np.vstack((self.epoch_trainLoss, self.epoch_validationLoss)).T, 4)
             header = "Train,Validation"
@@ -170,7 +171,7 @@ class Trainer():
         # save the graph of the total epochs 
             
         self.loss.saveLoss(self.epoch_limit, self.loss_path, self.epoch_trainLoss, self.epoch_validationLoss, True)
-        self.loss.plot_psnr(self.epoch_limit, self.epoch_validationPSNR, len(train_data))
+        self.ckp.plot_psnr(self.epoch_validationPSNR, self.epoch_limit)
 
 
     # validation in the training
@@ -208,8 +209,6 @@ class Trainer():
         self.epoch_validationLoss.append(np.average(self.validateLossTot))
         self.epoch_validationPSNR.append(np.average(self.validatePSNRtot))
 
-        self.ckp.write_log(f'Epoch {epoch} -> Validation: Average Loss: {np.average(self.validateLossTot):.4f}, Average PSNR: {np.average(self.validatePSNRtot):.4f}')
-
         # Plot for one epoch, plotting one for every printevery, as well as the first one
         # will also save the model and plot psnr
         if((epoch) % self.args.print_every == 0) or (epoch == 1):
@@ -225,6 +224,7 @@ class Trainer():
     # this will both save the model and test on the test images
     def test(self):
         print("Testing starting...")
+        self.ckp.write_log('\nTesting:')
 
         # load in the best model
         # if loading in pretrained model, set pre_train to model path
@@ -276,7 +276,9 @@ class Trainer():
                 self.ckp.save_results(save_list, idx_data, loss)
         
         elapsed_time = timer_test.toc()
-        saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
+
+        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Time Taken: {elapsed_time:.2f} seconds")
+        '''saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
         header = "Test Loss, Batch Size, Time Taken"
 
         results_file_path = os.path.join(self.args.dir_data, 'test', f'results.csv')
@@ -290,7 +292,7 @@ class Trainer():
         
         # saves the model, loss, and the pnsr model
         #if not self.args.test_only:
-        #    self.ckp.save(self, epoch)
+        #    self.ckp.save(self, epoch)'''
 
         torch.set_grad_enabled(True)
 
