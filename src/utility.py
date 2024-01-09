@@ -84,12 +84,11 @@ class checkpoint():
         open_type = 'a' if os.path.exists(self.get_path('log.txt')) else 'w'
 
         with open(self.get_path('log.txt'), open_type) as f:
-            if open_type == 'w':
-                f.write(now + '\n\n')
+            f.write(now + '\n')
 
         self.log_file = open(self.get_path('log.txt'), 'a')
 
-        with open(self.get_path('config.txt'), 'a') as f:
+        with open(self.get_path('config.txt'), open_type) as f:
             f.write(now + '\n\n')
             for arg in vars(args):
                 f.write('{}: {}\n'.format(arg, getattr(args, arg)))
@@ -123,16 +122,12 @@ class checkpoint():
         self.log_file.close()
 
     def plot_psnr(self, pnsrList, epochLim):
-        axis = np.arange(0, epochLim)
+        axis = np.arange(epochLim) + 1
         
         label = 'SR for Epochs'
         fig = plt.figure()
         plt.title(label)
-        plt.plot(
-            axis,
-            pnsrList,
-            label='Scale {}'.format(self.args.scale)
-        )
+        plt.plot(axis, pnsrList, label='Scale {}'.format(self.args.scale), marker = 'o', color = 'pink')
         plt.legend()
         plt.xlabel('Epochs')
         plt.ylabel('PSNR')

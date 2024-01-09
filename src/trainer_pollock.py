@@ -35,7 +35,6 @@ class Trainer():
         self.trainInd = trainInd
         self.testInd = testInd
         self.optimizer = utility.make_optimizer(self.args, self.model)
-        self.checkpoint = utility.checkpoint(self.args)
         self.idx_scale = 0
         self.epoch_limit = epoch_limit
         self.epoch_validationLoss = []
@@ -91,7 +90,8 @@ class Trainer():
 # training and validation log output
     def train(self):
         self.best_validation_average = 1e8
-        self.ckp.write_log('Training:')
+        print("Training starting...")
+        self.ckp.write_log('\nTraining:')
 
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
@@ -109,7 +109,6 @@ class Trainer():
             # initialization of loss log
             self.loss.start_log()
             self.trainLoss = []
-            print("Loss Log started")
                     
             # set model to train where there is possibility of test
             # train at the end of the validation
@@ -117,12 +116,9 @@ class Trainer():
             self.model.train()  # Set the model back to training mode
             
             # test
-            #self.optimizer.schedule()
+            self.optimizer.schedule()
             
-            print("Model to train reached")
-
             timer_data, timer_model = utility.timer(), utility.timer()
-            print("Timer set")
 
             # potentially write this to a txt file
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
@@ -161,10 +157,11 @@ class Trainer():
             self.validate_train(validation_data, len(train_data), epoch)
             self.ckp.write_log(f'Epoch {epoch} -> Validation Loss: {np.average(self.validateLossTot):.4f}, Training Loss: {np.average(self.epoch_trainLoss):.4f}, PSNR: {np.average(self.validatePSNRtot):.4f}')
 
-            loss_to_save = np.around(np.vstack((self.epoch_trainLoss, self.epoch_validationLoss)).T, 4)
+            # potential save depending on how we want 
+            '''loss_to_save = np.around(np.vstack((self.epoch_trainLoss, self.epoch_validationLoss)).T, 4)
             header = "Train,Validation"
 
-            np.savetxt(os.path.join(self.loss_path, f'lossLog.csv'), loss_to_save, delimiter=",", header=header, fmt="%.4f")
+            np.savetxt(os.path.join(self.loss_path, f'lossLog.csv'), loss_to_save, delimiter=",", header=header, fmt="%.4f")'''
         
         # update the csv/txt file with the average loss for each epoch
         # Training finished
@@ -180,7 +177,7 @@ class Trainer():
 
         # complete validation on the 10%
         # self.loss.start_log()
-        print("Validation Loss Log started")
+        print("Validation Loss Log Reached")
         self.validateLossTot = []
         self.validatePSNRtot = []
 
@@ -238,8 +235,7 @@ class Trainer():
         timer_test = utility.timer()
 
         test_data = self.testTot
-        # only taking the first 2 training images for now 
-        pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        pbar = tqdm(test_data, total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
@@ -277,7 +273,7 @@ class Trainer():
         
         elapsed_time = timer_test.toc()
 
-        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Time Taken: {elapsed_time:.2f} seconds")
+        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Time Taken: {elapsed_time:.2f} seconds" + '\n')
         '''saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
         header = "Test Loss, Batch Size, Time Taken"
 
@@ -302,7 +298,6 @@ class Trainer():
         if self.args.cpu:
             device = torch.device('cpu')
         else:
-            #print("CUDA Available: ", torch.cuda.is_available())
             if torch.backends.mps.is_available():
                 device = torch.device('mps')
             elif torch.cuda.is_available():

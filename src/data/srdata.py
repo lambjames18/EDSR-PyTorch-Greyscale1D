@@ -91,7 +91,8 @@ class SRData(data.Dataset):
             return idx
 
     def get_patch(self, lr, hr):
-        scale = self.scale[self.idx_scale]
+
+        scale = self.scale
 
         if type(scale) is str:
             scale = int(scale)
