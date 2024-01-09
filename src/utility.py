@@ -81,14 +81,15 @@ class checkpoint():
         #for d in args.data_test:
         #    os.makedirs(self.get_path('results-{}'.format(d)), exist_ok=True)
 
-        open_type = 'a' if os.path.exists(self.get_path('log.txt'))else 'w'
+        open_type = 'a' if os.path.exists(self.get_path('log.txt')) else 'w'
 
-        with open(self.get_path('log.txt'), 'w') as f:
-            f.write(now + '\n\n')
-        
-        self.log_file = open(self.get_path('log.txt'), open_type)
+        with open(self.get_path('log.txt'), open_type) as f:
+            if open_type == 'w':
+                f.write(now + '\n\n')
 
-        with open(self.get_path('config.txt'), open_type) as f:
+        self.log_file = open(self.get_path('log.txt'), 'a')
+
+        with open(self.get_path('config.txt'), 'a') as f:
             f.write(now + '\n\n')
             for arg in vars(args):
                 f.write('{}: {}\n'.format(arg, getattr(args, arg)))
