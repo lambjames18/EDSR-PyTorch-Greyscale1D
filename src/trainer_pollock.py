@@ -159,7 +159,7 @@ class Trainer():
             
             # will be one point on the graph of total
             self.validate_train(validation_data, len(train_data), epoch)
-            self.ckp.write_log(f'Epoch {epoch} -> Validation Loss: {np.average(self.validateLossTot):.4f}, Training Loss: {np.average(self.epoch_trainLoss)}, PSNR: {np.average(self.validatePSNRtot):.4f}')
+            self.ckp.write_log(f'Epoch {epoch} -> Validation Loss: {np.average(self.validateLossTot):.4f}, Training Loss: {np.average(self.epoch_trainLoss):.4f}, PSNR: {np.average(self.validatePSNRtot):.4f}')
 
             loss_to_save = np.around(np.vstack((self.epoch_trainLoss, self.epoch_validationLoss)).T, 4)
             header = "Train,Validation"
