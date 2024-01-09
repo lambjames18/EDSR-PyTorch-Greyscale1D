@@ -165,7 +165,7 @@ class checkpoint():
             postfix = ('SR', 'LR', 'HR')
             for v, p in zip(save_list, postfix):
                 
-                filename = 'results-{}'.format(index)
+                filename = p + f'{index}'
                 
                 if p == 'SR': 
                     filename += '_loss-{}'.format(np.round(loss.cpu(),3))

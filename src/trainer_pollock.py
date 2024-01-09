@@ -1,6 +1,8 @@
 import os
 import utility
 
+from skimage import io
+
 import torch
 import torch.nn.utils as utils
 import numpy as np
@@ -60,8 +62,8 @@ class Trainer():
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
 
-                lr = normalize(lr)
-                hr = normalize(hr)
+                #lr = normalize(lr)
+                #hr = normalize(hr)
 
                 lr_batch.append(lr)
                 hr_batch.append(hr)
@@ -76,13 +78,29 @@ class Trainer():
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
 
-            lr = normalize(lr)
-            hr = normalize(hr)
+            #lr = normalize(lr)
+            #hr = normalize(hr)
             
             test_files.append((lr,hr))
         
         self.trainTot = train_files
         self.testTot = test_files
+
+        # for testing purposes
+        '''for batch_idx, (lr,hr) in enumerate(self.trainTot):
+            filenameLr = 'LR' + str(batch_idx)
+            filenameHr = 'HR' + str(batch_idx)
+
+            # saving the images
+            normalizedLr = lr.mul(255 / self.args.rgb_range)
+            normalizedHr = hr.mul(255 / self.args.rgb_range)
+
+            image_arrayLr = np.squeeze(normalizedLr.cpu().numpy())
+            image_arrayHr = np.squeeze(normalizedHr.cpu().numpy())
+
+            # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
+            io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameLr)), image_arrayLr.astype(np.uint8))
+            io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameHr)), image_arrayHr.astype(np.uint8))'''
 
         self.train()
         self.test()
@@ -235,7 +253,8 @@ class Trainer():
         timer_test = utility.timer()
 
         test_data = self.testTot
-        pbar = tqdm(test_data, total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
