@@ -82,6 +82,8 @@ class checkpoint():
         #    os.makedirs(self.get_path('results-{}'.format(d)), exist_ok=True)
 
         open_type = 'a' if os.path.exists(self.get_path('log.txt'))else 'w'
+        self.log_file = open(self.get_path('log.txt'), open_type)
+        
         with open(self.get_path('log.txt'), open_type) as f:
             f.write(now + '\n\n')
 
