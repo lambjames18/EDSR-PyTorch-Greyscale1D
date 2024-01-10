@@ -18,6 +18,20 @@ class timer():
         if restart: self.t0 = time.time()
         return diff
 
+
+def normalize(image):
+    return ((image - image.min())/(image.max() - image.min())).astype(np.float32)
+
+
+def unnormalize(image, bit_depth=8):
+    if bit_depth == 8:
+        return np.around(image*255).astype(np.uint8)
+    elif bit_depth == 16:
+        return np.around(image*65535).astype(np.uint16)
+    else:
+        raise Exception("Invalid bit depth")
+
+
 class log():
     def __init__(self, args):
         # create the log file 

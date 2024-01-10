@@ -1,5 +1,6 @@
 import os
 import utility
+import utility2
 
 from skimage import io
 
@@ -62,8 +63,8 @@ class Trainer():
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
 
-                #lr = normalize(lr)
-                #hr = normalize(hr)
+                lr = utility2.normalize(lr)
+                hr = utility2.normalize(hr)
 
                 lr_batch.append(lr)
                 hr_batch.append(hr)
@@ -78,8 +79,8 @@ class Trainer():
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
 
-            #lr = normalize(lr)
-            #hr = normalize(hr)
+            lr = utility2.normalize(lr)
+            hr = utility2.normalize(hr)
             
             test_files.append((lr,hr))
         
@@ -138,14 +139,9 @@ class Trainer():
             
             timer_data, timer_model = utility.timer(), utility.timer()
 
-            normalize = transforms.Normalize(mean=[0.5], std=[0.5])
-
             # potentially write this to a txt file
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
             for batch_idx, (lr, hr) in enumerate(pbar):
-                
-                lr = normalize(lr)
-                hr = normalize(hr)
                 
                 lr, hr = self.prepare(lr,hr)
                 
@@ -199,8 +195,6 @@ class Trainer():
     def validate_train(self, validate_data, trainlength, epoch):
         torch.set_grad_enabled(False)
 
-        normalize = transforms.Normalize(mean=[0.5], std=[0.5])
-
         # complete validation on the 10%
         # self.loss.start_log()
         print("Validation Loss Log Reached")
@@ -214,9 +208,6 @@ class Trainer():
 
         # looping through the validation 
         for batch_idx, (lr,hr) in enumerate(validate_data):
-
-            lr = normalize(lr)
-            hr = normalize(hr)
 
             lr, hr = self.prepare(lr,hr)
 
@@ -267,18 +258,13 @@ class Trainer():
 
         test_data = self.testTot
         pbar = tqdm(test_data, total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
-
-        normalize = transforms.Normalize(mean=[0.5], std=[0.5])
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
         test_lossList = []
         for idx_data, (lr, hr) in enumerate(pbar): 
 
-            lrTOT, hrTOT = self.prepare(lr,hr)
-
-            lr = normalize(lrTOT)
-            hr = normalize(hrTOT)
+            lr, hr = self.prepare(lr,hr)
 
             # split the images into 4 and test on each of them
             hrList, lrList = self.ckp.test_split(hr, lr)
@@ -302,7 +288,9 @@ class Trainer():
             
             losses = [loss.cpu().numpy() for loss in testLossTot]
             test_lossList.append(np.average(losses))
-            save_list = [srConcate,lrTOT,hrTOT]
+            save_list = [utility2.unnormalize(srConcate),
+                         utility2.unnormalize(lr),
+                         utility2.unnormalize(hr)]
 
             # saves the results in the designated folders
             if self.args.save_results:
