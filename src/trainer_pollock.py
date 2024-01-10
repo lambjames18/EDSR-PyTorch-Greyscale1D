@@ -288,9 +288,10 @@ class Trainer():
             
             losses = [loss.cpu().numpy() for loss in testLossTot]
             test_lossList.append(np.average(losses))
-            save_list = [utility2.unnormalize(srConcate),
-                         utility2.unnormalize(lr),
-                         utility2.unnormalize(hr)]
+            #save_list = [utility2.unnormalize(srConcate),
+            #             utility2.unnormalize(lr),
+            #             utility2.unnormalize(hr)]
+            save_list = [srConcate, lr, hr]
 
             # saves the results in the designated folders
             if self.args.save_results:

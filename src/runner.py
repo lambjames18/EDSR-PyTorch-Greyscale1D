@@ -53,7 +53,7 @@ _model = model.Model(args, checkpoint)
 _loss = loss.Loss(args, checkpoint) 
 
 # seeing if the older version works
-epoch_limit = 10
+epoch_limit = 2
 
 # runs a new trainer for each set of indices returned
 splits = 5

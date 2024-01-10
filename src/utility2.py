@@ -1,5 +1,6 @@
 import os
 import time
+import torch
 import numpy as np
 from skimage import io
 
@@ -25,9 +26,9 @@ def normalize(image):
 
 def unnormalize(image, bit_depth=8):
     if bit_depth == 8:
-        return np.around(image*255).astype(np.uint8)
+        return torch.round(image*255).to(torch.uint8)
     elif bit_depth == 16:
-        return np.around(image*65535).astype(np.uint16)
+        return torch.round(image*65535).to(torch.uint16)
     else:
         raise Exception("Invalid bit depth")
 
