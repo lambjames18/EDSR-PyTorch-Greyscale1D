@@ -20,7 +20,7 @@ class timer():
 
 
 def normalize(image):
-    return ((image - image.min())/(image.max() - image.min())).astype(np.float32)
+    return ((image - image.min())/(image.max() - image.min()))
 
 
 def unnormalize(image, bit_depth=8):
