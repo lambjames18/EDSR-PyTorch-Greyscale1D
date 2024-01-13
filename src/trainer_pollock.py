@@ -48,14 +48,12 @@ class Trainer():
     
     # splits the training and testing based off of the indices 
     # runs the training and testing accordingly
-    def run(self): 
+    def run(self, test_only=False): 
         train_files = []
         test_files = []
 
         # Get the training data
         self.loaderTot.dataset.set_as_training()
-
-        normalize = transforms.Normalize(mean=[0.5], std=[0.5])
 
         for i in range(self.trainInd.shape[0] // self.args.batch_size):
             lr_batch = []
@@ -103,7 +101,8 @@ class Trainer():
             io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameLr)), image_arrayLr.astype(np.uint8))
             io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameHr)), image_arrayHr.astype(np.uint8))'''
 
-        self.train()
+        if not test_only:
+            self.train()
         self.test()
 
 # training and validation log output
@@ -262,36 +261,40 @@ class Trainer():
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
         test_lossList = []
+        test_psnrList = []
         for idx_data, (lr, hr) in enumerate(pbar): 
 
             lr, hr = self.prepare(lr,hr)
 
+            ## Method with splitting
             # split the images into 4 and test on each of them
+            # get the loss for each of them, taking the average at the end
+            # concate the split images back together
+            """
             hrList, lrList = self.ckp.test_split(hr, lr)
-
-            # srList has each of the 4 images 
-            # will stitch back together for saving as full image
             sr_list = []
             testLossTot = []
-
             for i in range(4):
                 sr = self.model(lrList[i], scale)
                 sr_list.append(sr)
                 loss = self.loss(sr, hrList[i])
-                testLossTot.append(loss) 
-
-            # combine the sr list back into 1 before adding to savelist
-            #srConcate = torch.cat(sr_list, dim=2)
+                testLossTot.append(loss)
             srConcate = torch.cat([torch.cat(sr_list[:2], dim=3), torch.cat(sr_list[2:], dim=3)], dim=2)
-            # Resize the concatenated HR image to the original size
             srConcate = F.interpolate(srConcate, size=(hr.size(2), hr.size(3)), mode='bicubic', align_corners=True)
-            
             losses = [loss.cpu().numpy() for loss in testLossTot]
             test_lossList.append(np.average(losses))
-            #save_list = [utility2.unnormalize(srConcate),
-            #             utility2.unnormalize(lr),
-            #             utility2.unnormalize(hr)]
             save_list = [srConcate, lr, hr]
+            """
+            # Method with no splitting
+            sr = self.model(lr, scale)
+            loss = self.loss(sr, hr)
+            psnrTest = self.ckp.calc_psnr(sr, hr, self.args.scale, 255)
+            
+            test_lossList.append(loss.cpu().numpy())
+            test_psnrList.append(psnrTest)
+
+            save_list = [sr, lr, hr]
+            #"""
 
             # saves the results in the designated folders
             if self.args.save_results:
@@ -299,7 +302,7 @@ class Trainer():
         
         elapsed_time = timer_test.toc()
 
-        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Time Taken: {elapsed_time:.2f} seconds" + '\n')
+        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Average PSNR: {np.average(test_psnrList):.4f}, Time Taken: {elapsed_time:.2f} seconds" + '\n')
         '''saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
         header = "Test Loss, Batch Size, Time Taken"
 

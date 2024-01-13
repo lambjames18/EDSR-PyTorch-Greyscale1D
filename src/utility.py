@@ -85,6 +85,8 @@ class checkpoint():
 
         with open(self.get_path('log.txt'), open_type) as f:
             f.write(now + '\n')
+            f.write("Batch size: {}\n".format(args.batch_size))
+            f.write("Loss Type: {}\n".format(args.loss.split('*')[0]))
 
         self.log_file = open(self.get_path('log.txt'), 'a')
 
@@ -167,16 +169,21 @@ class checkpoint():
                 
                 filename = p + f'{index}'
                 
-                if p == 'SR': 
-                    filename += '_loss-{}'.format(np.round(loss.cpu(),3))
+                #if p == 'SR': 
+                #    filename += '_loss-{}'.format(np.round(loss.cpu(),3))
 
-                normalized = v[0].mul(255 / self.args.rgb_range)
-
-                image_array = np.squeeze(normalized.cpu().numpy())
+                #normalized = v[0].mul(255 / self.args.rgb_range)
+                #image_array = np.squeeze(normalized.cpu().numpy())
+                image_array = np.squeeze(v.cpu().numpy())
+                #image_array = np.around(255 * (image_array - image_array.min())/(image_array.max() - image_array.min())).astype(np.uint8)
+                image_array = np.around(255 * image_array).astype(np.uint8)
 
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
                 io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
                 #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
+            with open(os.path.join(self.args.dir_data, 'test', 'SR_loss.txt'), 'a') as f:
+                f.write(f'{index} {np.round(loss.cpu(),3)}\n')
+
 
     # split the high and low res images into 4 to make them smaller
     def test_split(self, hr, lr):

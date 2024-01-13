@@ -63,7 +63,7 @@ class SRData(data.Dataset):
             for j in range(4):
                 img_temp = img_split[j]
                 img_temp_down = transform.downscale_local_mean(img_temp, (int(self.args.scale),1))
-                img_temp_down = (255 * img_temp_down/img_temp_down.max()).astype('uint8')
+                img_temp_down = np.around(255 * (img_temp_down - img_temp_down.min())/(img_temp_down.max() - img_temp_down.min())).astype('uint8')
                 hr_list.append(img_temp)
                 lr_list.append(img_temp_down)
         return hr_list, lr_list
