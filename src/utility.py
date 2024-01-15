@@ -86,7 +86,7 @@ class checkpoint():
         with open(self.get_path('log.txt'), open_type) as f:
             f.write(now + '\n')
             f.write("Batch size: {}\n".format(args.batch_size))
-            f.write("Loss Type: {}\n".format(args.loss.split('*')[0]))
+            f.write("Loss Type: {}\n".format(args.loss.split('*')[1]))
 
         self.log_file = open(self.get_path('log.txt'), 'a')
 
