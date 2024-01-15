@@ -297,7 +297,7 @@ class Trainer():
             #"""
 
             # saves the results in the designated folders
-            if self.args.save_results:
+            if self.args.save_results and idx_data <= self.args.saveImageLim:
                 self.ckp.save_results(save_list, idx_data, loss)
         
         elapsed_time = timer_test.toc()
