@@ -43,7 +43,6 @@ class Trainer():
         self.epoch_validationLoss = []
         self.epoch_validationPSNR = []
         self.epoch_trainLoss = []
-
         self.error_last = 1e8
     
     # splits the training and testing based off of the indices 
@@ -84,22 +83,6 @@ class Trainer():
         
         self.trainTot = train_files
         self.testTot = test_files
-
-        # for testing purposes
-        '''for batch_idx, (lr,hr) in enumerate(self.trainTot):
-            filenameLr = 'LR' + str(batch_idx)
-            filenameHr = 'HR' + str(batch_idx)
-
-            # saving the images
-            normalizedLr = lr.mul(255 / self.args.rgb_range)
-            normalizedHr = hr.mul(255 / self.args.rgb_range)
-
-            image_arrayLr = np.squeeze(normalizedLr.cpu().numpy())
-            image_arrayHr = np.squeeze(normalizedHr.cpu().numpy())
-
-            # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-            io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameLr)), image_arrayLr.astype(np.uint8))
-            io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameHr)), image_arrayHr.astype(np.uint8))'''
 
         if not test_only:
             self.train()
@@ -244,7 +227,12 @@ class Trainer():
 
         # load in the best model
         # if loading in pretrained model, set pre_train to model path
-        modelPath = os.path.join(self.args.dir_data, 'model')
+
+        if self.args.pre_train:
+            modelPath = self.args.pre_train
+        else:
+            modelPath = os.path.join(self.args.dir_data, 'model')
+        
         self.model.load(modelPath)
 
         torch.set_grad_enabled(False)
@@ -265,28 +253,14 @@ class Trainer():
         for idx_data, (lr, hr) in enumerate(pbar): 
 
             lr, hr = self.prepare(lr,hr)
-
-            ## Method with splitting
-            # split the images into 4 and test on each of them
-            # get the loss for each of them, taking the average at the end
-            # concate the split images back together
-            """
-            hrList, lrList = self.ckp.test_split(hr, lr)
-            sr_list = []
-            testLossTot = []
-            for i in range(4):
-                sr = self.model(lrList[i], scale)
-                sr_list.append(sr)
-                loss = self.loss(sr, hrList[i])
-                testLossTot.append(loss)
-            srConcate = torch.cat([torch.cat(sr_list[:2], dim=3), torch.cat(sr_list[2:], dim=3)], dim=2)
-            srConcate = F.interpolate(srConcate, size=(hr.size(2), hr.size(3)), mode='bicubic', align_corners=True)
-            losses = [loss.cpu().numpy() for loss in testLossTot]
-            test_lossList.append(np.average(losses))
-            save_list = [srConcate, lr, hr]
-            """
-            # Method with no splitting
             sr = self.model(lr, scale)
+
+            # only reaches this step in the loop if test only 
+            if self.args.pre_train != '':
+                save_list = [sr, lr]
+                self.ckp.save_results(save_list, idx_data)
+                continue
+
             loss = self.loss(sr, hr)
             psnrTest = self.ckp.calc_psnr(sr, hr, self.args.scale, 255)
             
@@ -294,7 +268,6 @@ class Trainer():
             test_psnrList.append(psnrTest)
 
             save_list = [sr, lr, hr]
-            #"""
 
             # saves the results in the designated folders
             if self.args.save_results and idx_data <= self.args.saveImageLim:
@@ -302,22 +275,8 @@ class Trainer():
         
         elapsed_time = timer_test.toc()
 
-        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Average PSNR: {np.average(test_psnrList):.4f}, Time Taken: {elapsed_time:.2f} seconds" + '\n')
-        '''saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
-        header = "Test Loss, Batch Size, Time Taken"
-
-        results_file_path = os.path.join(self.args.dir_data, 'test', f'results.csv')
-
-        # Check if the file already exists
-        if os.path.exists(results_file_path):
-            with open(results_file_path, 'a') as file:
-                np.savetxt(file, saveTest, delimiter=",", fmt="%.4f")
-        else:
-            np.savetxt(results_file_path, saveTest, delimiter=",", header=header, comments='', fmt="%.4f")
-        
-        # saves the model, loss, and the pnsr model
-        #if not self.args.test_only:
-        #    self.ckp.save(self, epoch)'''
+        if self.args.pre_train == '':
+            self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Average PSNR: {np.average(test_psnrList):.4f}, Time Taken: {elapsed_time:.2f} seconds" + '\n')
 
         torch.set_grad_enabled(True)
 

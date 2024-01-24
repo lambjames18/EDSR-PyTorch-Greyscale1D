@@ -138,51 +138,36 @@ class checkpoint():
         plt.close(fig)
 
     
+    
 
-    '''def begin_background(self):
-        self.queue = Queue()
-
-        self.process = [
-            Process(target=bg_target, args=(self.queue,)) \
-            for _ in range(self.n_processes)
-        ]
-        
-        for p in self.process: p.start()'''
-
-    '''def end_background(self):
-        for _ in range(self.n_processes): self.queue.put((None, None))
-        while not self.queue.empty(): time.sleep(1)
-        for p in self.process: p.join()'''
-
-    def save_results(self, save_list, index, loss):
+    def save_results(self, save_list, index, loss=0, testOnly = False):
         if self.args.save_results:
             # save list format: sr, lr, hr
-            postfix = ('SR', 'LR', 'HR')
+
+            postfix = ('SR', 'LR')
+
+            if not testOnly:
+                postfix.append('HR')
 
             for i in postfix:
                 path = os.path.join(self.args.dir_data, 'test', i)
                 os.makedirs(path, exist_ok = True)
             
-            
-            postfix = ('SR', 'LR', 'HR')
             for v, p in zip(save_list, postfix):
                 
                 filename = p + f'{index}'
-                
-                #if p == 'SR': 
-                #    filename += '_loss-{}'.format(np.round(loss.cpu(),3))
 
-                #normalized = v[0].mul(255 / self.args.rgb_range)
-                #image_array = np.squeeze(normalized.cpu().numpy())
                 image_array = np.squeeze(v.cpu().numpy())
-                #image_array = np.around(255 * (image_array - image_array.min())/(image_array.max() - image_array.min())).astype(np.uint8)
+                
                 image_array = np.around(255 * image_array).astype(np.uint8)
 
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
                 io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
                 #self.queue.put(('{}{}.tiff'.format(filename, p), tensor_cpu))
-            with open(os.path.join(self.args.dir_data, 'test', 'SR_loss.txt'), 'a') as f:
-                f.write(f'{index} {np.round(loss.cpu(),3)}\n')
+            
+            if not testOnly:
+                with open(os.path.join(self.args.dir_data, 'test', 'SR_loss.txt'), 'a') as f:
+                    f.write(f'{index} {np.round(loss.cpu(),3)}\n')
 
 
     # split the high and low res images into 4 to make them smaller
