@@ -60,8 +60,8 @@ class Trainer():
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
 
-                lr = utility2.normalize(lr)
-                hr = utility2.normalize(hr)
+                lr = self.ckp.normalize(lr)
+                hr = self.ckp.normalize(hr)
 
                 lr_batch.append(lr)
                 hr_batch.append(hr)
@@ -295,7 +295,5 @@ class Trainer():
         
         lr = lr.to(device)
         hr = hr.to(device)
-
-
 
         return lr, hr  

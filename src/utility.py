@@ -138,7 +138,8 @@ class checkpoint():
         plt.close(fig)
 
     
-    
+    def normalize(image):
+        return ((image - image.min())/(image.max() - image.min()))
 
     def save_results(self, save_list, index, loss=0, testOnly = False):
         if self.args.save_results:
@@ -158,7 +159,6 @@ class checkpoint():
                 filename = p + f'{index}'
 
                 image_array = np.squeeze(v.cpu().numpy())
-                
                 image_array = np.around(255 * image_array).astype(np.uint8)
 
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
