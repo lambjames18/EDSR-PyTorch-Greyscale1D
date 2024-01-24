@@ -1,5 +1,8 @@
 import os
 import utility
+import utility2
+
+from skimage import io
 
 import torch
 import torch.nn.utils as utils
@@ -35,7 +38,6 @@ class Trainer():
         self.trainInd = trainInd
         self.testInd = testInd
         self.optimizer = utility.make_optimizer(self.args, self.model)
-        self.checkpoint = utility.checkpoint(self.args)
         self.idx_scale = 0
         self.epoch_limit = epoch_limit
         self.epoch_validationLoss = []
@@ -46,14 +48,12 @@ class Trainer():
     
     # splits the training and testing based off of the indices 
     # runs the training and testing accordingly
-    def run(self): 
+    def run(self, test_only=False): 
         train_files = []
         test_files = []
 
         # Get the training data
         self.loaderTot.dataset.set_as_training()
-
-        normalize = transforms.Normalize(mean=[0.5], std=[0.5])
 
         for i in range(self.trainInd.shape[0] // self.args.batch_size):
             lr_batch = []
@@ -61,8 +61,8 @@ class Trainer():
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
 
-                lr = normalize(lr)
-                hr = normalize(hr)
+                lr = utility2.normalize(lr)
+                hr = utility2.normalize(hr)
 
                 lr_batch.append(lr)
                 hr_batch.append(hr)
@@ -77,21 +77,39 @@ class Trainer():
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
 
-            lr = normalize(lr)
-            hr = normalize(hr)
+            lr = utility2.normalize(lr)
+            hr = utility2.normalize(hr)
             
             test_files.append((lr,hr))
         
         self.trainTot = train_files
         self.testTot = test_files
 
-        self.train()
+        # for testing purposes
+        '''for batch_idx, (lr,hr) in enumerate(self.trainTot):
+            filenameLr = 'LR' + str(batch_idx)
+            filenameHr = 'HR' + str(batch_idx)
+
+            # saving the images
+            normalizedLr = lr.mul(255 / self.args.rgb_range)
+            normalizedHr = hr.mul(255 / self.args.rgb_range)
+
+            image_arrayLr = np.squeeze(normalizedLr.cpu().numpy())
+            image_arrayHr = np.squeeze(normalizedHr.cpu().numpy())
+
+            # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
+            io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameLr)), image_arrayLr.astype(np.uint8))
+            io.imsave(os.path.join(self.args.dir_data, 'test', '{}.tiff'.format(filenameHr)), image_arrayHr.astype(np.uint8))'''
+
+        if not test_only:
+            self.train()
         self.test()
 
 # training and validation log output
     def train(self):
         self.best_validation_average = 1e8
-        self.ckp.write_log('Training:')
+        print("Training starting...")
+        self.ckp.write_log('\nTraining:')
 
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
@@ -109,7 +127,6 @@ class Trainer():
             # initialization of loss log
             self.loss.start_log()
             self.trainLoss = []
-            print("Loss Log started")
                     
             # set model to train where there is possibility of test
             # train at the end of the validation
@@ -117,18 +134,16 @@ class Trainer():
             self.model.train()  # Set the model back to training mode
             
             # test
-            #self.optimizer.schedule()
+            self.optimizer.schedule()
             
-            print("Model to train reached")
-
             timer_data, timer_model = utility.timer(), utility.timer()
-            print("Timer set")
 
             # potentially write this to a txt file
             pbar = tqdm(train_data, total=len(train_data), desc=f"Epoch {epoch}", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
             for batch_idx, (lr, hr) in enumerate(pbar):
-
+                
                 lr, hr = self.prepare(lr,hr)
+                
                 timer_data.hold()
                 timer_model.tic()
 
@@ -161,10 +176,11 @@ class Trainer():
             self.validate_train(validation_data, len(train_data), epoch)
             self.ckp.write_log(f'Epoch {epoch} -> Validation Loss: {np.average(self.validateLossTot):.4f}, Training Loss: {np.average(self.epoch_trainLoss):.4f}, PSNR: {np.average(self.validatePSNRtot):.4f}')
 
-            loss_to_save = np.around(np.vstack((self.epoch_trainLoss, self.epoch_validationLoss)).T, 4)
+            # potential save depending on how we want 
+            '''loss_to_save = np.around(np.vstack((self.epoch_trainLoss, self.epoch_validationLoss)).T, 4)
             header = "Train,Validation"
 
-            np.savetxt(os.path.join(self.loss_path, f'lossLog.csv'), loss_to_save, delimiter=",", header=header, fmt="%.4f")
+            np.savetxt(os.path.join(self.loss_path, f'lossLog.csv'), loss_to_save, delimiter=",", header=header, fmt="%.4f")'''
         
         # update the csv/txt file with the average loss for each epoch
         # Training finished
@@ -180,7 +196,7 @@ class Trainer():
 
         # complete validation on the 10%
         # self.loss.start_log()
-        print("Validation Loss Log started")
+        print("Validation Loss Log Reached")
         self.validateLossTot = []
         self.validatePSNRtot = []
 
@@ -230,54 +246,63 @@ class Trainer():
         # if loading in pretrained model, set pre_train to model path
         modelPath = os.path.join(self.args.dir_data, 'model')
         self.model.load(modelPath)
-        print("Model Loaded: ", modelPath)
 
         torch.set_grad_enabled(False)
         self.model.eval()
 
         timer_test = utility.timer()
 
+        # initialization of loss log
+        self.loss.start_log()
+
         test_data = self.testTot
-        # only taking the first 2 training images for now 
-        pbar = tqdm(test_data[:2], total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        pbar = tqdm(test_data, total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
         test_lossList = []
+        test_psnrList = []
         for idx_data, (lr, hr) in enumerate(pbar): 
+
             lr, hr = self.prepare(lr,hr)
 
+            ## Method with splitting
             # split the images into 4 and test on each of them
+            # get the loss for each of them, taking the average at the end
+            # concate the split images back together
+            """
             hrList, lrList = self.ckp.test_split(hr, lr)
-
-            # srList has each of the 4 images 
-            # will stitch back together for saving as full image
             sr_list = []
             testLossTot = []
-
             for i in range(4):
                 sr = self.model(lrList[i], scale)
                 sr_list.append(sr)
                 loss = self.loss(sr, hrList[i])
-                testLossTot.append(loss) 
-
-            # combine the sr list back into 1 before adding to savelist
-            #srConcate = torch.cat(sr_list, dim=2)
+                testLossTot.append(loss)
             srConcate = torch.cat([torch.cat(sr_list[:2], dim=3), torch.cat(sr_list[2:], dim=3)], dim=2)
-            # Resize the concatenated HR image to the original size
             srConcate = F.interpolate(srConcate, size=(hr.size(2), hr.size(3)), mode='bicubic', align_corners=True)
-            
             losses = [loss.cpu().numpy() for loss in testLossTot]
             test_lossList.append(np.average(losses))
-            save_list = [srConcate,lr,hr]
+            save_list = [srConcate, lr, hr]
+            """
+            # Method with no splitting
+            sr = self.model(lr, scale)
+            loss = self.loss(sr, hr)
+            psnrTest = self.ckp.calc_psnr(sr, hr, self.args.scale, 255)
+            
+            test_lossList.append(loss.cpu().numpy())
+            test_psnrList.append(psnrTest)
+
+            save_list = [sr, lr, hr]
+            #"""
 
             # saves the results in the designated folders
-            if self.args.save_results:
+            if self.args.save_results and idx_data <= self.args.saveImageLim:
                 self.ckp.save_results(save_list, idx_data, loss)
         
         elapsed_time = timer_test.toc()
 
-        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Time Taken: {elapsed_time:.2f} seconds")
+        self.ckp.write_log(f"Test Loss: {np.average(test_lossList):.4f}, Batch Size: {self.args.batch_size}, Average PSNR: {np.average(test_psnrList):.4f}, Time Taken: {elapsed_time:.2f} seconds" + '\n')
         '''saveTest = np.around(np.vstack((np.average(test_lossList), self.args.batch_size, elapsed_time)).T, 4)
         header = "Test Loss, Batch Size, Time Taken"
 
@@ -302,7 +327,6 @@ class Trainer():
         if self.args.cpu:
             device = torch.device('cpu')
         else:
-            #print("CUDA Available: ", torch.cuda.is_available())
             if torch.backends.mps.is_available():
                 device = torch.device('mps')
             elif torch.cuda.is_available():
@@ -312,5 +336,7 @@ class Trainer():
         
         lr = lr.to(device)
         hr = hr.to(device)
+
+
 
         return lr, hr  

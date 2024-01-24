@@ -1,5 +1,6 @@
 import os
 import time
+import torch
 import numpy as np
 from skimage import io
 
@@ -17,6 +18,20 @@ class timer():
         diff = time.time() - self.t0
         if restart: self.t0 = time.time()
         return diff
+
+
+def normalize(image):
+    return ((image - image.min())/(image.max() - image.min()))
+
+
+def unnormalize(image, bit_depth=8):
+    if bit_depth == 8:
+        return torch.round(image*255).to(torch.uint8)
+    elif bit_depth == 16:
+        return torch.round(image*65535).to(torch.uint16)
+    else:
+        raise Exception("Invalid bit depth")
+
 
 class log():
     def __init__(self, args):
