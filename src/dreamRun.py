@@ -78,7 +78,7 @@ for image_ind in range(100):
 
     srImages.append(_sr)
 
-    '''fig, ax = plt.subplots(1, 2, figsize=(15, 6))
+    fig, ax = plt.subplots(1, 2, figsize=(15, 6))
     ax[0].imshow(_sr, cmap='gray')
     ax[1].imshow(_lr, cmap='gray')
     ax[0].set_title("SR")
@@ -87,11 +87,11 @@ for image_ind in range(100):
     fig.suptitle(name)
     plt.tight_layout()
     plt.savefig(f"C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/dreamResults/{name}.png")
-    plt.close()'''
+    plt.close()
 
 
 # graphing srImages with a slider 
-fig = plt.figure(81234, figsize=(12, 8))
+'''fig = plt.figure(81234, figsize=(12, 8))
 ax = fig.add_subplot(111)
 
 vmin = np.amin(srImages)
@@ -114,5 +114,5 @@ slice_slider = matplotlib.widgets.Slider(
     valinit=0,
     valstep=1,
     orientation="vertical",
-)
+)'''
 
