@@ -24,7 +24,7 @@ def prepare(lr, args):
     lr = lr.to(device)
     return lr
 
-h = h5py.File('/Users/anayakhan/Downloads/5842WCu.dream3d', 'r')  # dream3d is a file format that is identical to an HDF5 file, just with a different name
+h = h5py.File('C:/Users/PollockGroup/Documents/coding/DreamData/5842WCu.dream3d', 'r')  # dream3d is a file format that is identical to an HDF5 file, just with a different name
 
 # Get the data
 volume = np.squeeze(h['DataContainers/ImageDataContainer/CellData/BSE'][...])  # we use np.squeeze in order to remove the extra dimension that Dream3D adds to the data
@@ -37,7 +37,7 @@ print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*volume.shap
 axis = 1
 stack = np.stack(volume, axis = axis)
 
-args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48, --pre_train", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"])
+args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--pre_train", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -47,13 +47,13 @@ checkpoint = utility.checkpoint(args)
 model = model.Model(args, checkpoint)
 
 #modelPath = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"
-model.load("", pre_train=args.modelPath)
+model.load("", pre_train=args.pre_train)
 torch.set_grad_enabled(False)
 model.eval()
 
 for image_ind in range(len(stack)):
     name = f"Axis{axis}_{image_ind}"
-
+    x = stack[image_ind]
     LR = checkpoint.normalize(stack[image_ind])
     LR = prepare(LR)
 
