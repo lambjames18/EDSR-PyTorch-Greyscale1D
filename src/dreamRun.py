@@ -24,6 +24,11 @@ def prepare(lr, args):
     lr = lr.to(device)
     return lr
 
+def normalize(image):
+    minVal = np.min(image, axis=1)
+    maxVal = np.max(image, axis=1)
+    return (image - minVal)/(maxVal - minVal)
+
 h = h5py.File('C:/Users/PollockGroup/Documents/coding/DreamData/5842WCu.dream3d', 'r')  # dream3d is a file format that is identical to an HDF5 file, just with a different name
 
 # Get the data
@@ -35,7 +40,7 @@ print("Dimensions: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*np.array
 print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*volume.shape))
 
 axis = 1
-stack = np.stack(volume, axis = axis)
+#stack = np.stack(volume, axis = axis)
 
 args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--pre_train", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"])
 args = option_mod.format_args(args)
@@ -51,11 +56,14 @@ model.load("", pre_train=args.pre_train)
 torch.set_grad_enabled(False)
 model.eval()
 
-for image_ind in range(len(stack)):
+#for image_ind in range(volume.shape[axis]):
+for image_ind in range(100):
     name = f"Axis{axis}_{image_ind}"
-    x = stack[image_ind]
-    LR = checkpoint.normalize(stack[image_ind])
-    LR = prepare(LR)
+    
+    x = volume[:, image_ind, :]
+
+    LR = checkpoint.normalize(x)
+    LR = prepare(LR, args)
 
     SR = model(LR, args.scale)
 
@@ -63,18 +71,16 @@ for image_ind in range(len(stack)):
     SR_array = np.around(255 * SR_array).astype(np.uint8)
 
     _lr = LR[0, 0, :, :].detach().cpu().numpy()
-    _lr = np.repeat(_lr, args.scale, axis=0)
+    #_lr = np.repeat(_lr, args.scale, axis=0)
     _sr = SR[0, 0, :, :].detach().cpu().numpy()
 
     fig, ax = plt.subplots(1, 2, figsize=(15, 6))
     ax[0].imshow(_sr, cmap='gray')
     ax[1].imshow(_lr, cmap='gray')
-    ax[1].set_title("SR")
-    ax[2].set_title("LR")
+    ax[0].set_title("SR")
+    ax[1].set_title("LR")
 
     fig.suptitle(name)
     plt.tight_layout()
-    plt.savefig(f"C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/results/{name}.png")
+    plt.savefig(f"C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/dreamResults/{name}.png")
     plt.close()
-
-

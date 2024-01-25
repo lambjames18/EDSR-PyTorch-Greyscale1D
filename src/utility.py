@@ -138,7 +138,7 @@ class checkpoint():
         plt.close(fig)
 
     
-    def normalize(image):
+    def normalize(self, image):
         return ((image - image.min())/(image.max() - image.min()))
 
     def save_results(self, save_list, index, loss=0, testOnly = False):
