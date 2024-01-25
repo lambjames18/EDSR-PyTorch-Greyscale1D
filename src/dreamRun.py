@@ -3,6 +3,7 @@ import h5py
 import torch
 
 import matplotlib.pyplot as plt
+import matplotlib.widgets
 
 import model 
 import option_mod
@@ -56,6 +57,7 @@ model.load("", pre_train=args.pre_train)
 torch.set_grad_enabled(False)
 model.eval()
 
+srImages = []
 #for image_ind in range(volume.shape[axis]):
 for image_ind in range(100):
     name = f"Axis{axis}_{image_ind}"
@@ -74,7 +76,9 @@ for image_ind in range(100):
     #_lr = np.repeat(_lr, args.scale, axis=0)
     _sr = SR[0, 0, :, :].detach().cpu().numpy()
 
-    fig, ax = plt.subplots(1, 2, figsize=(15, 6))
+    srImages.append(_sr)
+
+    '''fig, ax = plt.subplots(1, 2, figsize=(15, 6))
     ax[0].imshow(_sr, cmap='gray')
     ax[1].imshow(_lr, cmap='gray')
     ax[0].set_title("SR")
@@ -83,4 +87,32 @@ for image_ind in range(100):
     fig.suptitle(name)
     plt.tight_layout()
     plt.savefig(f"C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/dreamResults/{name}.png")
-    plt.close()
+    plt.close()'''
+
+
+# graphing srImages with a slider 
+fig = plt.figure(81234, figsize=(12, 8))
+ax = fig.add_subplot(111)
+
+vmin = np.amin(srImages)
+vmax = np.amax(srImages)
+
+im = ax.imshow(srImages[0], cmap='gray', vmin = vmin, vmax = vmax)
+
+# Put slider on
+plt.subplots_adjust(left=0.15, bottom=0.15)
+left = ax.get_position().x0
+bot = ax.get_position().y0
+height = ax.get_position().height
+right = ax.get_position().x1
+axslice = plt.axes([left - 0.15, bot, 0.05, height])
+slice_slider = matplotlib.widgets.Slider(
+    ax=axslice,
+    label="Slice #",
+    valmin=0,
+    valmax=len(srImages) - 1,
+    valinit=0,
+    valstep=1,
+    orientation="vertical",
+)
+
