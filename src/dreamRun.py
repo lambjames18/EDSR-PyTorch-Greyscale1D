@@ -1,6 +1,8 @@
 import numpy as np
 import h5py
 import torch
+from skimage import io
+from tqdm.auto import tqdm
 
 import matplotlib.pyplot as plt
 import matplotlib.widgets
@@ -43,7 +45,7 @@ print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*volume.shap
 axis = 1
 #stack = np.stack(volume, axis = axis)
 
-args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--pre_train", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"])
+args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--pre_train", "F:/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -58,8 +60,8 @@ torch.set_grad_enabled(False)
 model.eval()
 
 srImages = []
-#for image_ind in range(volume.shape[axis]):
-for image_ind in range(100):
+
+for image_ind in tqdm(range(volume.shape[axis])):
     name = f"Axis{axis}_{image_ind}"
     
     x = volume[:, image_ind, :]
@@ -70,25 +72,37 @@ for image_ind in range(100):
     SR = model(LR, args.scale)
 
     SR_array = np.squeeze(SR.cpu().numpy())
-    SR_array = np.around(255 * SR_array).astype(np.uint8)
+    SR_array = np.around(255 * (SR_array - SR_array.min()) / (SR_array.max() - SR_array.min())).astype(np.uint8)
 
-    _lr = LR[0, 0, :, :].detach().cpu().numpy()
+    #_lr = LR[0, 0, :, :].detach().cpu().numpy()
     #_lr = np.repeat(_lr, args.scale, axis=0)
-    _sr = SR[0, 0, :, :].detach().cpu().numpy()
+    #_sr = SR_array[0, 0, :, :].detach().cpu().numpy()
 
-    srImages.append(_sr)
+    srImages.append(SR_array)
 
-    fig, ax = plt.subplots(1, 2, figsize=(15, 6))
+    # io.imsave(f"F:/WCu-Data-SR/dreamResults/{name}.tiff", SR_array)
+
+    '''fig, ax = plt.subplots(1, 2, figsize=(15, 6))
     ax[0].imshow(_sr, cmap='gray')
-    ax[1].imshow(_lr, cmap='gray')
+    #ax[1].imshow(_lr, cmap='gray')
     ax[0].set_title("SR")
     ax[1].set_title("LR")
 
     fig.suptitle(name)
     plt.tight_layout()
-    plt.savefig(f"C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/dreamResults/{name}.png")
-    plt.close()
+    plt.savefig(f"F:/WCu-Data-SR/dreamResults/{name}.png")
+    plt.close()'''
 
+srImages = np.stack(srImages, axis = axis)
+
+resolution = np.array(resolution) / np.array([int(args.scale), 1, 1])
+
+print("Resolution: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*resolution))
+print("Dimensions: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*np.array(srImages.shape) * np.array(resolution)))  # Note that we have much higher resolution in the XY plane than in the Z plane
+print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*srImages.shape))
+
+for i in range(srImages.shape[0]):
+    io.imsave(f"F:/WCu-Data-SR/dreamResults/{i}.tiff", srImages[i])
 
 # graphing srImages with a slider 
 '''fig = plt.figure(81234, figsize=(12, 8))

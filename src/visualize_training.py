@@ -38,7 +38,7 @@ def prepare(lr, hr, args):
     hr = hr.to(device)
     return lr, hr
 
-args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
+args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -49,11 +49,11 @@ model = model.Model(args, checkpoint)
 loss = loss.Loss(args, checkpoint)
 loss.start_log()
 
-directory = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/model/"
+directory = "F:/WCu-Data-SR/Results/Trained_Model/model/"
 model_paths = [os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and f != "model_best.pt"]
 model_paths = sorted(model_paths, key=lambda x: int(x.split("/")[-1].split(".")[0].split("_")[-1]))
 
-HR = io.imread("C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/Slice000.tif")[500:1500, 500:1500].astype(np.float32)
+HR = io.imread("F:/WCu-Data-SR/Slice000.tif")[500:1500, 500:1500].astype(np.float32)
 HR = (HR - np.min(HR)) / (np.max(HR) - np.min(HR))
 LR = transform.downscale_local_mean(HR, (int(args.scale),1))
 LR, HR = prepare(LR, HR, args)
@@ -84,5 +84,5 @@ for model_path in model_paths:
     ax[2].set_title("SR")
     fig.suptitle(f"{name} ({str(loss_val)})")
     plt.tight_layout()
-    plt.savefig(f"C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/results/{name}.png")
+    plt.savefig(f"F:/WCu-Data-SR/visualize_training/{name}.png")
     plt.close()
