@@ -26,6 +26,12 @@ class Loss(nn.modules.loss._Loss):
                 loss_function = nn.MSELoss()
             elif loss_type == 'L1':
                 loss_function = nn.L1Loss()
+            elif loss_type == "GV":
+                gv = import_module('loss.gradient_variance_loss')
+                loss_function = gv.GradientVariance(args.patch_size, args.cpu)
+            elif loss_type == 'G':
+                g = import_module('loss.g_loss')
+                loss_function = g.GLoss(args.cpu)
 
             self.loss.append({
                 'type': loss_type,

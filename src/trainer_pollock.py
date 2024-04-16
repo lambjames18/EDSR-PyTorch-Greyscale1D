@@ -93,11 +93,16 @@ class Trainer():
         self.best_validation_average = 1e8
         print("Training starting...")
         self.ckp.write_log('\nTraining:')
+        # first instance of saving the loss
+        self.loss_path = os.path.join(self.args.dir_data, 'loss')
+        os.makedirs(self.loss_path, exist_ok=True)
 
         for epoch in range(1, self.epoch_limit + 1):
             # taking the first ten percent of the training images as validation 
             # after validating in the validation function, shuffles and takes another 
             validate_ind = (len(self.trainTot)) // 10
+            if validate_ind == 0:
+                validate_ind = 1
             random.shuffle(self.trainTot)
 
             validation_data = self.trainTot[:validate_ind]
@@ -151,10 +156,6 @@ class Trainer():
             # what we want 
             self.error_last = self.loss.log[-1, -1]
 
-            # first instance of saving the loss
-            self.loss_path = os.path.join(self.args.dir_data, 'loss')
-            os.makedirs(self.loss_path, exist_ok=True)
-            
             # will be one point on the graph of total
             self.validate_train(validation_data, len(train_data), epoch)
             self.ckp.write_log(f'Epoch {epoch} -> Validation Loss: {np.average(self.validateLossTot):.4f}, Training Loss: {np.average(self.epoch_trainLoss):.4f}, PSNR: {np.average(self.validatePSNRtot):.4f}')
@@ -177,16 +178,11 @@ class Trainer():
     def validate_train(self, validate_data, trainlength, epoch):
         torch.set_grad_enabled(False)
 
-        # complete validation on the 10%
-        # self.loss.start_log()
-        print("Validation Loss Log Reached")
         self.validateLossTot = []
         self.validatePSNRtot = []
 
         # the weights wont be updated 
         self.model.eval()
-
-        timer_data, timer_model = utility.timer(), utility.timer()
 
         # looping through the validation 
         for batch_idx, (lr,hr) in enumerate(validate_data):
@@ -194,8 +190,6 @@ class Trainer():
             lr, hr = self.prepare(lr,hr)
 
             with torch.no_grad():
-                timer_data.hold()
-                timer_model.tic()
 
                 sr = self.model(lr, 0)
                 loss = self.loss(sr, hr)
@@ -267,7 +261,7 @@ class Trainer():
             test_lossList.append(loss.cpu().numpy())
             test_psnrList.append(psnrTest)
 
-            save_list = [sr, lr, hr]
+            save_list = [lr, sr, hr]
 
             # saves the results in the designated folders
             if self.args.save_results and idx_data <= self.args.saveImageLim:

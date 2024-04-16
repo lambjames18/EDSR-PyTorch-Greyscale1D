@@ -49,7 +49,7 @@ class SRData(data.Dataset):
         hr_list = []
         lr_list = []
 
-        print(self.apath)
+        print("Reading images from", self.apath)
         for file in os.listdir(self.apath):
             if file.endswith('.tif'):
                 imgs.append(io.imread(os.path.join(self.apath, file)))
@@ -57,15 +57,24 @@ class SRData(data.Dataset):
                 break
 
         # fill the high res and low res
+        row_size = min([img.shape[0] for img in imgs])
+        row_size = row_size - row_size % int(self.args.scale)
+        col_size = min([img.shape[1] for img in imgs])
+        col_size = col_size - col_size % int(self.args.scale)
         for i in range(len(imgs)):
-            img = imgs[i]
-            img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
-            for j in range(4):
-                img_temp = img_split[j]
-                img_temp_down = transform.downscale_local_mean(img_temp, (int(self.args.scale),1))
-                img_temp_down = np.around(255 * (img_temp_down - img_temp_down.min())/(img_temp_down.max() - img_temp_down.min())).astype('uint8')
-                hr_list.append(img_temp)
-                lr_list.append(img_temp_down)
+            img = imgs[i].astype(np.float32)[:row_size, :col_size]
+            img = np.around(255 * (img - img.min())/(img.max() - img.min())).astype('uint8')
+            hr_list.append(img)
+            img_down = transform.downscale_local_mean(img, (int(self.args.scale),1))
+            img_down = np.around(255 * (img_down - img_down.min())/(img_down.max() - img_down.min())).astype('uint8')
+            lr_list.append(img_down)
+            # img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
+            # for j in range(4):
+            #     img_temp = img_split[j]
+            #     img_temp_down = transform.downscale_local_mean(img_temp, (int(self.args.scale),1))
+            #     img_temp_down = np.around(255 * (img_temp_down - img_temp_down.min())/(img_temp_down.max() - img_temp_down.min())).astype('uint8')
+            #     hr_list.append(img_temp)
+            #     lr_list.append(img_temp_down)
         return hr_list, lr_list
 
     def __getitem__(self, idx):

@@ -26,7 +26,8 @@ from sklearn.model_selection import KFold
 # args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 # args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 # this command line uses a batch size of 8 
-args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR","--imageLim", "10", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
+args = option_mod.parser.parse_args(["--dir_data", "D:/Research/WCu/Data/SuperRes/","--imageLim", "100", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G"])
+# args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR","--imageLim", "10", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 #args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "1", "--n_GPUs", "1", "--patch_size", "48", "--loss_path", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"])
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
@@ -53,38 +54,42 @@ _model = model.Model(args, checkpoint)
 _loss = loss.Loss(args, checkpoint)
 
 # seeing if the older version works
-epoch_limit = 1000
+epoch_limit = 500
 
 # runs a new trainer for each set of indices returned
-splits = 5
-kf = KFold(n_splits=splits)
+# splits = 5
+# kf = KFold(n_splits=splits)
 
 #loader.total_loader.dataset.set_as_training()
 # list of 0s 
 #X = [(lr, hr) for (lr, hr) in loader.total_loader]
-X = np.zeros(len(loader.total_loader.dataset.images_hr))
+# X = np.zeros(len(loader.total_loader.dataset.images_hr))
 
 
-for fold, (trainInd, testInd) in enumerate(kf.split(X)):
-    #checkpoint.write_log(f"Fold {fold}" + '\n' + "-----------------------------------")
-    print(f'Fold {fold}')
-    print("-----------------------------------")
+# for fold, (trainInd, testInd) in enumerate(kf.split(X)):
+#checkpoint.write_log(f"Fold {fold}" + '\n' + "-----------------------------------")
+# print(f'Fold {fold}')
+# print("-----------------------------------")
 
-    print("Test indices: ", testInd)
-    print("Train indices: ", trainInd)
-    
-    trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit, checkpoint)
-    # beginning with running the training
-    trainer.run()
-    exit()
-    """
-    ### testing the model and getting the output
-    trainer.test() # output one image and get loss values for all testin images
-    loss_values = trainer.test_loss_values
-    print("Average loss: ", np.mean(loss_values), np.std(loss_values))
-    with open("loss.txt", "a") as output_file:
-        output_file.write(f"{fold} {np.mean(loss_values)} {np.std(loss_values)}\n")
-    """
+Ind = np.arange(len(loader.total_loader.dataset.images_hr))
+trainInd = Ind[:int(len(Ind)*0.8)]
+testInd = Ind[int(len(Ind)*0.8):]
+
+print("Test indices: ", testInd)
+print("Train indices: ", trainInd)
+
+trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit, checkpoint)
+# beginning with running the training
+trainer.run()
+exit()
+"""
+### testing the model and getting the output
+trainer.test() # output one image and get loss values for all testin images
+loss_values = trainer.test_loss_values
+print("Average loss: ", np.mean(loss_values), np.std(loss_values))
+with open("loss.txt", "a") as output_file:
+    output_file.write(f"{fold} {np.mean(loss_values)} {np.std(loss_values)}\n")
+"""
 
     
 

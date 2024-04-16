@@ -17,6 +17,9 @@ import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lrs
 
+from data import common
+
+
 class timer():
     def __init__(self):
         self.acc = 0
@@ -143,21 +146,22 @@ class checkpoint():
 
     def save_results(self, save_list, index, loss=0, testOnly = False):
         if self.args.save_results:
+            # save_list = common.get_patch(*save_list, patch_size=self.args.patch_size, scale=self.args.scale)
             # save list format: sr, lr, hr
 
-            postfix = ('SR', 'LR')
+            postfix = ['LR', 'SR']
 
             if not testOnly:
                 postfix.append('HR')
 
             for i in postfix:
                 path = os.path.join(self.args.dir_data, 'test', i)
-                os.makedirs(path, exist_ok = True)
+                os.makedirs(path, exist_ok=True)
             
             for v, p in zip(save_list, postfix):
                 
                 filename = p + f'{index}'
-
+                
                 image_array = np.squeeze(v.cpu().numpy())
                 image_array = np.around(255 * image_array).astype(np.uint8)
 
