@@ -21,10 +21,11 @@ class timer():
 
 
 def normalize(image):
-    return ((image - image.min())/(image.max() - image.min()))
+    return 2*((image - image.min())/(image.max() - image.min())) - 1
 
 
 def unnormalize(image, bit_depth=8):
+    image = (image - image.min())/(image.max() - image.min())
     if bit_depth == 8:
         return torch.round(image*255).to(torch.uint8)
     elif bit_depth == 16:

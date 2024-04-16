@@ -52,9 +52,12 @@ class SRData(data.Dataset):
         print("Reading images from", self.apath)
         for file in os.listdir(self.apath):
             if file.endswith('.tif'):
+                #print("Reading file: ", file)
                 imgs.append(io.imread(os.path.join(self.apath, file)))
             if len(imgs) >= self.args.imageLim and self.args.imageLim != 0:
                 break
+        if len(imgs) == 0:
+            raise ValueError("No images found in the directory. Please check the path.")
 
         # fill the high res and low res
         row_size = min([img.shape[0] for img in imgs])

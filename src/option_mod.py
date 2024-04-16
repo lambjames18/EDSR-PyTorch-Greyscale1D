@@ -84,6 +84,8 @@ parser.add_argument('--test_only', action='store_true',
                     help='set this option to test the model')
 parser.add_argument('--k_fold', type=int, default=5,
                     help = 'k fold number of splits')
+parser.add_argument('--use_best', action='store_true',
+                    help='use best checkpoint during training')
 
 # Optimization specifications
 parser.add_argument('--lr', type=float, default=1e-4,
@@ -112,8 +114,6 @@ parser.add_argument('--loss', type=str, default='1*MSE',
                     help='loss function configuration')
 parser.add_argument('--skip_threshold', type=float, default='1e8',
                     help='skipping batch that has large error')
-parser.add_argument('--loss_path', type = str, default = '../../dataset/SR-Data', 
-                     help = 'where to save the loss graph')
 
 # Log specifications
 parser.add_argument('--save', type=str, default='test',

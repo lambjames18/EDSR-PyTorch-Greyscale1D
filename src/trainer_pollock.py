@@ -60,8 +60,8 @@ class Trainer():
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
 
-                lr = self.ckp.normalize(lr)
-                hr = self.ckp.normalize(hr)
+                lr = utility2.normalize(lr)
+                hr = utility2.normalize(hr)
 
                 lr_batch.append(lr)
                 hr_batch.append(hr)
@@ -86,6 +86,7 @@ class Trainer():
 
         if not test_only:
             self.train()
+        exit()
         self.test()
 
 # training and validation log output
@@ -118,6 +119,9 @@ class Trainer():
                     
             # set model to train where there is possibility of test
             # train at the end of the validation
+            if self.args.use_best and epoch != 1:
+                modelPath = os.path.join(self.args.dir_data, 'model/model_best.pt')
+                self.model.load(modelPath)
             torch.set_grad_enabled(True)
             self.model.train()  # Set the model back to training mode
             
@@ -197,6 +201,11 @@ class Trainer():
 
                 self.validatePSNRtot.append(psnr)
                 self.validateLossTot.append(loss.cpu().numpy())
+                if batch_idx == 0:
+                    sr_numpy = np.squeeze(utility2.unnormalize(sr[0]).cpu().numpy())
+                    hr_numpy = np.squeeze(utility2.unnormalize(hr[0]).cpu().numpy())
+                    io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_SR.tiff'), sr_numpy.astype(np.uint8))
+                    io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_HR.tiff'), hr_numpy.astype(np.uint8))
 
         # adding the average 
         self.epoch_validationLoss.append(np.average(self.validateLossTot))
@@ -225,7 +234,7 @@ class Trainer():
         if self.args.pre_train:
             modelPath = self.args.pre_train
         else:
-            modelPath = os.path.join(self.args.dir_data, 'model')
+            modelPath = os.path.join(self.args.dir_data, 'model/model_best.pt')
         
         self.model.load(modelPath)
 

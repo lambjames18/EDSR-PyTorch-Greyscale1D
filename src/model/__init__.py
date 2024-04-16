@@ -36,12 +36,11 @@ class Model(nn.Module):
         if args.precision == 'half':
             self.model.half()
 
-        self.load(
-            ckp.get_path('model'),
-            pre_train=args.pre_train,
-            resume=args.resume,
-            cpu=args.cpu
-        )
+        if args.pre_train != '':
+            self.load(
+                args.pre_train,
+                cpu=args.cpu
+            )
 
     def forward(self, x, idx_scale):
         self.idx_scale = idx_scale
@@ -76,53 +75,15 @@ class Model(nn.Module):
     # loads the model when testing on the best model
     # load any model we give it
     # for testing after training, load in the best model
-    def load(self, apath, pre_train='', resume=-1, cpu=False):
-        load_from = None
+    def load(self, apath="", cpu=False):
         kwargs = {}
         if cpu:
             kwargs = {'map_location': lambda storage, loc: storage}
         else:
             kwargs = {'map_location': self.device}
 
-        '''if resume == -1:
-            load_from = torch.load(
-                os.path.join(apath, 'model_latest.pt'),
-                **kwargs
-            )
-        elif resume == 0:
-            if pre_train == 'download':
-                print('Download the model')
-                dir_model = os.path.join('..', 'models')
-                os.makedirs(dir_model, exist_ok=True)
-                load_from = torch.utils.model_zoo.load_url(
-                    self.model.url,
-                    model_dir=dir_model,
-                    **kwargs
-                )
-            elif pre_train:
-                print('Load the model from {}'.format(pre_train))
-                # keep
-                load_from = torch.load(pre_train, **kwargs)
-        else:
-            load_from = torch.load(
-                os.path.join(apath, 'model_{}.pt'.format(resume)),
-                **kwargs
-            )'''
-        
-        # Loading from pretrain
-        if pre_train: 
-            print('Load the model from {}'.format(pre_train))
-            load_from = torch.load(pre_train, **kwargs)
-        
-        # the default is loading in the best model 
-        elif resume == -1: 
-            load_from = torch.load(
-                os.path.join(apath, 'model_best.pt'),
-                **kwargs
-            )
-
-        if load_from:
-            self.model.load_state_dict(load_from, strict=False)
+        load_from = torch.load(apath, **kwargs)
+        self.model.load_state_dict(load_from, strict=False)
 
     def forward_chop(self, *args, shave=10, min_size=160000):
         scale = self.scale[self.idx_scale]
