@@ -9,7 +9,7 @@ class GLoss(nn.Module):
        patch_size : int, scalar, size of the patches extracted from the gt and predicted images
        cpu : bool,  whether to run calculation on cpu or gpu
         """
-    def __init__(self, cpu=False, pooling="max", loss_type="mae"):
+    def __init__(self, cpu=False, pooling="max", loss_type="mse"):
         super(GLoss, self).__init__()
         # Sobel kernel for the gradient map calculation
         self.kernel_0 = torch.FloatTensor([[-1, 0, 0], [0, 1, 0], [0, 0, 0]]).unsqueeze(0).unsqueeze(0)
