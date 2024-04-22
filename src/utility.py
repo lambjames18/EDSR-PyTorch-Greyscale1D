@@ -140,9 +140,6 @@ class checkpoint():
         plt.savefig(os.path.join(self.args.dir_data, 'test', 'psnr_log.png'))
         plt.close(fig)
 
-    
-    def normalize(self, image):
-        return ((image - image.min())/(image.max() - image.min()))
 
     def save_results(self, save_list, index, loss=0, testOnly = False):
         if self.args.save_results:
@@ -182,6 +179,7 @@ class checkpoint():
         lr_split = [lr[:, :, :lowResLim, :1000], lr[:, :, :lowResLim, 1000:2000], lr[:, :, lowResLim:2000, :1000], lr[:, :, lowResLim:2000, 1000:2000]]
         return hr_split, lr_split
     
+        
     # look into the conversion for greyscale
     def calc_psnr(self, sr, hr, scale, rgb_range, dataset=None):
         if type(scale) is not int:
@@ -209,6 +207,21 @@ class checkpoint():
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
     return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
+
+def normalize(image, improve_contrast=True):
+        if improve_contrast:
+            return 2*((image - image.min())/(image.max() - image.min())) - 1
+        else:
+            return 2*(image/image.max()) - 1
+        
+def unnormalize(image, bit_depth=8):
+    image = (image - image.min())/(image.max() - image.min())
+    if bit_depth == 8:
+        return torch.round(image*255).to(torch.uint8)
+    elif bit_depth == 16:
+        return torch.round(image*65535).to(torch.uint16)
+    else:
+        raise Exception("Invalid bit depth")
 
 def make_optimizer(args, target):
     '''

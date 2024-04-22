@@ -60,8 +60,8 @@ class Trainer():
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
 
-                lr = utility2.normalize(lr)
-                hr = utility2.normalize(hr)
+                lr = utility.normalize(lr)
+                hr = utility.normalize(hr)
 
                 lr_batch.append(lr)
                 hr_batch.append(hr)
@@ -76,8 +76,8 @@ class Trainer():
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
 
-            lr = utility2.normalize(lr)
-            hr = utility2.normalize(hr)
+            lr = utility.normalize(lr)
+            hr = utility.normalize(hr)
             
             test_files.append((lr,hr))
         
@@ -86,7 +86,6 @@ class Trainer():
 
         if not test_only:
             self.train()
-        exit()
         self.test()
 
 # training and validation log output
@@ -202,8 +201,8 @@ class Trainer():
                 self.validatePSNRtot.append(psnr)
                 self.validateLossTot.append(loss.cpu().numpy())
                 if batch_idx == 0:
-                    sr_numpy = np.squeeze(utility2.unnormalize(sr[0]).cpu().numpy())
-                    hr_numpy = np.squeeze(utility2.unnormalize(hr[0]).cpu().numpy())
+                    sr_numpy = np.squeeze(utility.unnormalize(sr[0]).cpu().numpy())
+                    hr_numpy = np.squeeze(utility.unnormalize(hr[0]).cpu().numpy())
                     io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_SR.tiff'), sr_numpy.astype(np.uint8))
                     io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_HR.tiff'), hr_numpy.astype(np.uint8))
 
@@ -231,6 +230,7 @@ class Trainer():
         # load in the best model
         # if loading in pretrained model, set pre_train to model path
 
+        print(os.path.join(self.args.dir_data, 'model/model_best.pt'))
         if self.args.pre_train:
             modelPath = self.args.pre_train
         else:
@@ -247,24 +247,22 @@ class Trainer():
         self.loss.start_log()
 
         test_data = self.testTot
-        pbar = tqdm(test_data, total=len(test_data), desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
+        pbar = tqdm(test_data[:2], total=2, desc=f"Testing", unit="batch", bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}')
         
         scale = self.args.scale
         self.loaderTot.dataset.set_scale(scale)
         test_lossList = []
         test_psnrList = []
         for idx_data, (lr, hr) in enumerate(pbar): 
+            # testing
+            lr = lr[:, :, :500, :2000]
+            hr = hr[:, :, :2000, :2000]
 
             lr, hr = self.prepare(lr,hr)
             sr = self.model(lr, scale)
 
-            # only reaches this step in the loop if test only 
-            if self.args.pre_train != '':
-                save_list = [sr, lr]
-                self.ckp.save_results(save_list, idx_data)
-                continue
-
             loss = self.loss(sr, hr)
+            print(type(loss), loss)
             psnrTest = self.ckp.calc_psnr(sr, hr, self.args.scale, 255)
             
             test_lossList.append(loss.cpu().numpy())
@@ -283,6 +281,7 @@ class Trainer():
 
         torch.set_grad_enabled(True)
 
+    print("Testing finished.")
 
     def prepare(self, lr, hr):
          # defining the device without the parallel processing in the given function

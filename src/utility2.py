@@ -20,8 +20,11 @@ class timer():
         return diff
 
 
-def normalize(image):
-    return 2*((image - image.min())/(image.max() - image.min())) - 1
+def normalize(image, improve_contrast=True):
+    if improve_contrast:
+        return 2*((image - image.min())/(image.max() - image.min())) - 1
+    else:
+        return 2*(image/image.max()) - 1
 
 
 def unnormalize(image, bit_depth=8):
