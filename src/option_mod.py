@@ -53,6 +53,8 @@ parser.add_argument('--act', type=str, default='relu',
                     help='activation function')
 parser.add_argument('--pre_train', type=str, default='',
                     help='pre-trained model directory')
+parser.add_argument('--EDSR_path', type=str, default='',
+                    help='pre-trained EDSR model directory (for EDSR_Restormer)')
 parser.add_argument('--extend', type=str, default='.',
                     help='pre-trained model directory')
 parser.add_argument('--n_resblocks', type=int, default=32,

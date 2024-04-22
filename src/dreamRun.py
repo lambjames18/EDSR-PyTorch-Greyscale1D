@@ -38,6 +38,12 @@ h = h5py.File('C:/Users/PollockGroup/Documents/coding/DreamData/5842WCu.dream3d'
 volume = np.squeeze(h['DataContainers/ImageDataContainer/CellData/BSE'][...])  # we use np.squeeze in order to remove the extra dimension that Dream3D adds to the data
 resolution = h['DataContainers/ImageDataContainer/_SIMPL_GEOMETRY/SPACING'][...][::-1]  # Dream3D stores the resolution backwards so we need to flip it
 
+z, y, x
+y, z, x
+swapped_vol = np.swapaxes(volume, 0, 1)
+... run SR on swapped_vol[i] ...
+unswapped_vol = np.swapaxes(swapped_vol, 0, 1)
+
 print("Resolution: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*resolution))
 print("Dimensions: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*np.array(volume.shape) * np.array(resolution)))  # Note that we have much higher resolution in the XY plane than in the Z plane
 print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*volume.shape))
@@ -61,8 +67,8 @@ model.eval()
 
 srImages = []
 
-for image_ind in tqdm(range(volume.shape[axis])):
-    name = f"Axis{axis}_{image_ind}"
+for image_ind in tqdm(range(volume.shape[1])):
+    name = f"Axis1_{image_ind}"
     
     x = volume[:, image_ind, :]
 
@@ -93,7 +99,9 @@ for image_ind in tqdm(range(volume.shape[axis])):
     plt.savefig(f"F:/WCu-Data-SR/dreamResults/{name}.png")
     plt.close()'''
 
-srImages = np.stack(srImages, axis = axis)
+# srImages = np.stack(srImages, axis = axis)
+srImages = np.array(srImages)
+srImages = np.swapaxes(srImages, 0, 1)
 
 resolution = np.array(resolution) / np.array([int(args.scale), 1, 1])
 

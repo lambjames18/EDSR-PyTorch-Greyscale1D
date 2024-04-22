@@ -30,9 +30,22 @@ class Model(nn.Module):
         self.n_GPUs = args.n_GPUs
         self.save_models = args.save_models
 
-        module = import_module('model.' + args.model.lower())
-        print("Model import: ", module)
-        self.model = module.make_model(args).to(self.device)
+        if args.model.lower() == "restormer":
+            args.model = "EDSR"
+            pretrain = str(args.pre_train)
+            args.pre_train = args.EDSR_path
+            EDSR = Model(args, ckp)
+            if args.EDSR_path == '':
+                raise Exception("EDSR path is empty. The EDSR_Restormer model requires a path to the EDSR model.")
+            args.pre_train = pretrain
+            module = import_module('model.restormer')
+            print("Model import: ", module)
+            self.model = module.make_model(EDSR=EDSR, scale=args.scale).to(self.device)
+        else:
+            module = import_module('model.' + args.model.lower())
+            print("Model import: ", module)
+            self.model = module.make_model(args).to(self.device)
+
         if args.precision == 'half':
             self.model.half()
 
