@@ -3,7 +3,6 @@ import data
 import model
 import loss
 import option_mod
-import utility2
 
 import torch
 import numpy as np
@@ -40,20 +39,26 @@ def calc_psnr(sr, hr, scale=4, data_range=None):
 
 
 # Get the image to look at
-img = io.imread("F:/WCu-Data-SR/5842WCu_Images/Slice000.tif")[:400, :400]
+# img = io.imread("F:/WCu-Data-SR/5842WCu_Images/Slice000.tif")[:400, :400]
+img = io.imread("F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/0.tif")[:400, :400]
 img_down = transform.downscale_local_mean(img, (4, 1))
 img = np.expand_dims(np.expand_dims(img, axis=0), axis=0)
 img_down = np.expand_dims(np.expand_dims(img_down, axis=0), axis=0)
 img = torch.from_numpy(img).float()
 img_down = torch.from_numpy(img_down).float()
-img = utility2.normalize(img)
-img_down = utility2.normalize(img_down)
+img = utility.normalize(img)
+img_down = utility.normalize(img_down)
 
-filePath = "F:/WCu-Data-SR/5842WCu_Images/"
+#filePath = "F:/WCu-Data-SR/5842WCu_Images/"
+filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/"
+#"F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt" 
+edsrPath = "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt"
+# "F:/WCu-Data-SR/5842WCu_Images/model/model_best.pt"
+preTrain = filePath + "/pretrained/improved_contrast/model_best.pt"
+
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
                                      "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer",
-                                     "--EDSR_path", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt",
-                                     "--pre_train", "F:/WCu-Data-SR/5842WCu_Images/model/model_best.pt"])
+                                     "--EDSR_path", edsrPath, "--pre_train", preTrain])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -69,14 +74,14 @@ lr, hr = prepare(img_down, img, args)
 sr = restormer(lr, int(args.scale))
 print("Restormer PSNR:", calc_psnr(sr, hr).item())
 
-io.imsave("SR-Restormer.png", utility2.unnormalize(sr[0, 0]).cpu().numpy())
-io.imsave("HR-Restormer.png", utility2.unnormalize(hr[0, 0]).cpu().numpy())
+io.imsave("SR-Restormer.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
+io.imsave("HR-Restormer.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
 
 
-filePath = "F:/WCu-Data-SR/5842WCu_Images/"
+#filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
                                      "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "EDSR",
-                                     "--pre_train", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt"])
+                                     "--pre_train", edsrPath])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -92,5 +97,5 @@ lr, hr = prepare(img_down, img, args)
 sr = edsr(lr, int(args.scale))
 print("EDSR PSNR:", calc_psnr(sr, hr).item())
 
-io.imsave("SR-EDSR.png", utility2.unnormalize(sr[0, 0]).cpu().numpy())
-io.imsave("HR-EDSR.png", utility2.unnormalize(hr[0, 0]).cpu().numpy())
+io.imsave("SR-EDSR.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
+io.imsave("HR-EDSR.png", utility.unnormalize(hr[0, 0]).cpu().numpy())

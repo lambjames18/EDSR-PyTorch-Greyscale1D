@@ -159,8 +159,11 @@ class checkpoint():
                 
                 filename = p + f'{index}'
                 
-                image_array = np.squeeze(v.cpu().numpy())
-                image_array = np.around(255 * image_array).astype(np.uint8)
+                #image_array = np.squeeze(v.cpu().numpy())
+                #image_array = np.around(255 * image_array).astype(np.uint8)
+
+                # unnormalize the image
+                image_array = unnormalize(v).cpu().numpy()
 
                 # tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
                 io.imsave(os.path.join(self.args.dir_data, 'test', p,  '{}.tiff'.format(filename)), image_array.astype(np.uint8))
