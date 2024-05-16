@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io, transform
 
+import os
+
 
 def prepare(lr, hr, args):
     # defining the device without the parallel processing in the given function
@@ -52,13 +54,13 @@ img_down = utility.normalize(img_down)
 #filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/"
 #"F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt" 
-edsrPath = "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt"
+edsrPath = filePath + "/pretrained/restormer/model/model_best.pt"
 # "F:/WCu-Data-SR/5842WCu_Images/model/model_best.pt"
-preTrain = filePath + "/pretrained/improved_contrast/model_best.pt"
+preTrain = filePath + "/pretrained/improved_contrast/model/model_best.pt"
 
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
                                      "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer",
-                                     "--EDSR_path", edsrPath, "--pre_train", preTrain])
+                                     "--EDSR_path", edsrPath])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -74,14 +76,14 @@ lr, hr = prepare(img_down, img, args)
 sr = restormer(lr, int(args.scale))
 print("Restormer PSNR:", calc_psnr(sr, hr).item())
 
-io.imsave("SR-Restormer.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
-io.imsave("HR-Restormer.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
+io.imsave(filePath + "restormerTest/SR-Restormer.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
+io.imsave(filePath + "/restormerTest/HR-Restormer.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
 
 
 #filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
                                      "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "EDSR",
-                                     "--pre_train", edsrPath])
+                                     "--pre_train", preTrain])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -97,5 +99,8 @@ lr, hr = prepare(img_down, img, args)
 sr = edsr(lr, int(args.scale))
 print("EDSR PSNR:", calc_psnr(sr, hr).item())
 
-io.imsave("SR-EDSR.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
-io.imsave("HR-EDSR.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
+io.imsave(filePath + "/restormerTest/SR-EDSR.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
+io.imsave(filePath + "/restormerTest/HR-EDSR.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
+
+# printing out the working directory
+print("Current Working Directory: ", os.getcwd())

@@ -41,8 +41,8 @@ filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greysc
 # "--EDSR_path", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt, "--model", "Restormer""
 # improved_contrast model is better than the original contrast model
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1",
-                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--pre_train", 
-                                     filePath + "/pretrained/improved_contrast/model_best.pt"])
+                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer", "--imageLim", "10", 
+                                     "--EDSR_path", filePath + "/pretrained/improved_contrast/model/model_best.pt"])
 
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
@@ -69,7 +69,7 @@ _model = model.Model(args, checkpoint)
 _loss = loss.Loss(args, checkpoint)
 
 # Training the model with the new normalization, seeing if theres a difference
-epoch_limit = 500
+epoch_limit = 100
 
 # runs a new trainer for each set of indices returned
 # splits = 5
@@ -96,7 +96,7 @@ print("Setup successful")
 
 trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit, checkpoint)
 # beginning with running the training
-trainer.run(test_only=True)
+trainer.run(test_only= True)
 
 """
 ### testing the model and getting the output
