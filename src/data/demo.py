@@ -1,4 +1,4 @@
-import os
+'''import os
 
 from data import common
 
@@ -35,5 +35,5 @@ class Demo(data.Dataset):
         return len(self.filelist)
 
     def set_scale(self, idx_scale):
-        self.idx_scale = idx_scale
+        self.idx_scale = idx_scale'''
 

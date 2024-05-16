@@ -28,22 +28,8 @@ def get_patch(*args, patch_size=96, scale=2):
     ]
 
     return ret
-
-
-    '''ix = random.randrange(0, iw - patch_size + 1)
-    iy = random.randrange(0, ih - patch_size + 1)
-
-    tx, ty = scale * ix, scale * iy
-
-    # for 2D
-    ret = [
-        args[0][iy:iy + patch_size, ix:ix + patch_size],
-        *[a[ty:ty + (patch_size * scale), tx:tx + (patch_size * scale)] for a in args[1:]]
-    ]'''
-
    
-
-def set_channel(*args, n_channels=3):
+'''def set_channel(*args, n_channels=3):
     def _set_channel(img):
         if img.ndim == 2:
             img = np.expand_dims(img, axis=2)
@@ -66,9 +52,9 @@ def np2Tensor(*args, rgb_range=255):
 
         return tensor
 
-    return [_np2Tensor(a) for a in args]
+    return [_np2Tensor(a) for a in args]'''
 
-def augment(*args):
+'''def augment(*args):
     hflip = random.random() < 0.5
     vflip = random.random() < 0.5
 
@@ -78,5 +64,5 @@ def augment(*args):
         
         return img
 
-    return [_augment(a) for a in args]
+    return [_augment(a) for a in args]'''
 

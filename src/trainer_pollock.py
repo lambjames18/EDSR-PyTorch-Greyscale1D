@@ -1,6 +1,5 @@
 import os
 import utility
-import utility2
 
 from skimage import io
 
@@ -8,7 +7,6 @@ import torch
 import torch.nn.utils as utils
 import numpy as np
 import torch.nn.functional as F
-from torchvision import transforms
 from datetime import datetime
 
 import matplotlib

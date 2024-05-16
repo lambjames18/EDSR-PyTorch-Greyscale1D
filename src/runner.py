@@ -29,7 +29,7 @@ filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greysc
 #filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
-# args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
+#args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 # args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 # this command line uses a batch size of 8 
 # args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/5842WCu_Images/", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--pre_train", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt"])

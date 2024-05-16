@@ -1,4 +1,4 @@
-import os
+'''import os
 import glob
 import random
 import pickle
@@ -165,5 +165,5 @@ class SRData(data.Dataset):
         if not self.input_large:
             self.idx_scale = idx_scale
         else:
-            self.idx_scale = random.randint(0, len(self.scale) - 1)
+            self.idx_scale = random.randint(0, len(self.scale) - 1)'''
 
