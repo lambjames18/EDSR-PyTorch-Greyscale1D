@@ -49,12 +49,11 @@ class SRData(data.Dataset):
         hr_list = []
         lr_list = []
 
-        count=0
+        
         print("Reading images from", self.apath)
         for file in os.listdir(self.apath):
-            if file.endswith('.tif') and count < 10:
+            if file.endswith('.tif'):
                 imgs.append(io.imread(os.path.join(self.apath, file)))
-                count += 1
             if len(imgs) >= self.args.imageLim and self.args.imageLim != 0:
                 break
         if len(imgs) == 0:

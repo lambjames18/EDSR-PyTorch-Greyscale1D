@@ -32,17 +32,20 @@ def normalize(image):
     maxVal = np.max(image, axis=1)
     return (image - minVal)/(maxVal - minVal)
 
-h = h5py.File('C:/Users/PollockGroup/Documents/coding/DreamData/5842WCu.dream3d', 'r')  # dream3d is a file format that is identical to an HDF5 file, just with a different name
-
+# h = h5py.File('C:/Users/PollockGroup/Documents/coding/DreamData/5842WCu.dream3d', 'r')  # dream3d is a file format that is identical to an HDF5 file, just with a different name
+h = h5py.File("F:/WCu-Data-SR/8119WCu/dream3D/8119WCu.dream3D", 'r')
 # Get the data
 volume = np.squeeze(h['DataContainers/ImageDataContainer/CellData/BSE'][...])  # we use np.squeeze in order to remove the extra dimension that Dream3D adds to the data
+# setting the y and z axis to be length 1000
+volume = volume[:, 1000:2000, 1000:2000]
 resolution = h['DataContainers/ImageDataContainer/_SIMPL_GEOMETRY/SPACING'][...][::-1]  # Dream3D stores the resolution backwards so we need to flip it
+h.close()
 
-z, y, x
+'''z, y, x
 y, z, x
 swapped_vol = np.swapaxes(volume, 0, 1)
 ... run SR on swapped_vol[i] ...
-unswapped_vol = np.swapaxes(swapped_vol, 0, 1)
+unswapped_vol = np.swapaxes(swapped_vol, 0, 1)'''
 
 print("Resolution: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*resolution))
 print("Dimensions: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*np.array(volume.shape) * np.array(resolution)))  # Note that we have much higher resolution in the XY plane than in the Z plane
@@ -51,7 +54,10 @@ print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*volume.shap
 axis = 1
 #stack = np.stack(volume, axis = axis)
 
-args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--pre_train", "F:/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"])
+args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/", 
+                                     "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48",
+                                     "--model", "Restormer", 
+                                     "--EDSR_path", "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/pretrained/restormer/model/model_best.pt"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -61,24 +67,31 @@ checkpoint = utility.checkpoint(args)
 model = model.Model(args, checkpoint)
 
 #modelPath = "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/Results/Trained_Model/model/model_best.pt"
-model.load("", pre_train=args.pre_train)
+model.load(args.EDSR_path)
 torch.set_grad_enabled(False)
 model.eval()
 
 srImages = []
 
+# swapping the axis 
+swapped_vol = np.swapaxes(volume, 0, 1)
+print("New Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*swapped_vol.shape))
+
 for image_ind in tqdm(range(volume.shape[1])):
     name = f"Axis1_{image_ind}"
     
-    x = volume[:, image_ind, :]
+    #x = volume[:, image_ind, :]
+    x = swapped_vol[image_ind]
 
-    LR = checkpoint.normalize(x)
+    LR = utility.normalize(x)
     LR = prepare(LR, args)
 
     SR = model(LR, args.scale)
 
     SR_array = np.squeeze(SR.cpu().numpy())
     SR_array = np.around(255 * (SR_array - SR_array.min()) / (SR_array.max() - SR_array.min())).astype(np.uint8)
+
+    #SR_array = utility.unnormalize(SR_array).cpu().numpy()
 
     #_lr = LR[0, 0, :, :].detach().cpu().numpy()
     #_lr = np.repeat(_lr, args.scale, axis=0)
@@ -99,8 +112,8 @@ for image_ind in tqdm(range(volume.shape[1])):
     plt.savefig(f"F:/WCu-Data-SR/dreamResults/{name}.png")
     plt.close()'''
 
-# srImages = np.stack(srImages, axis = axis)
-srImages = np.array(srImages)
+#srImages = np.array(srImages)
+# swapping the axis back
 srImages = np.swapaxes(srImages, 0, 1)
 
 resolution = np.array(resolution) / np.array([int(args.scale), 1, 1])
@@ -109,8 +122,8 @@ print("Resolution: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*resoluti
 print("Dimensions: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*np.array(srImages.shape) * np.array(resolution)))  # Note that we have much higher resolution in the XY plane than in the Z plane
 print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*srImages.shape))
 
-for i in range(srImages.shape[0]):
-    io.imsave(f"F:/WCu-Data-SR/dreamResults/{i}.tiff", srImages[i])
+for i in range(len(srImages)):
+    io.imsave(f"F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/SR_imageStack/{i}.tiff", srImages[i])
 
 # graphing srImages with a slider 
 '''fig = plt.figure(81234, figsize=(12, 8))

@@ -29,7 +29,7 @@ filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greysc
 #filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
-# args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
+#args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 # args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 # this command line uses a batch size of 8 
 # args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/5842WCu_Images/", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--pre_train", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt"])
@@ -39,9 +39,10 @@ filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greysc
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 
 # "--EDSR_path", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt, "--model", "Restormer""
+# improved_contrast model is better than the original contrast model
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1",
-                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--pre_train", 
-                                     "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/pretrained/model_best.pt"])
+                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer", "--imageLim", "10", 
+                                     "--EDSR_path", filePath + "/pretrained/improved_contrast/model/model_best.pt"])
 
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
@@ -67,8 +68,8 @@ _model = model.Model(args, checkpoint)
 
 _loss = loss.Loss(args, checkpoint)
 
-# seeing if the older version works
-epoch_limit = 150
+# Training the model with the new normalization, seeing if theres a difference
+epoch_limit = 100
 
 # runs a new trainer for each set of indices returned
 # splits = 5
@@ -95,8 +96,8 @@ print("Setup successful")
 
 trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit, checkpoint)
 # beginning with running the training
-trainer.run()
-exit()
+trainer.run(test_only= True)
+
 """
 ### testing the model and getting the output
 trainer.test() # output one image and get loss values for all testin images
