@@ -1,17 +1,18 @@
 import numpy as np
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.widgets
+matplotlib.use('TkAgg')
 
 class Viewer:
-    def __init__(self, stack, cmap, vmin=None, vmax=None):
+    def __init__(self, stack, cmap="viridis", vmin=None, vmax=None):
         if vmin is None:
             vmin = np.amin(stack)
         if vmax is None:
             vmax = np.amax(stack)
         self.slider_index = 0
         self.stack = stack
-        #self.dims = np.array(self.stack.shape)
+        self.dims = np.array(self.stack.shape)
         plt.close(81234)
         self.fig = plt.figure(81234, figsize=(12, 8))
         self.ax = self.fig.add_subplot(111)
@@ -25,7 +26,7 @@ class Viewer:
         height = self.ax.get_position().height
         right = self.ax.get_position().x1
         axslice = plt.axes([left - 0.15, bot, 0.05, height])
-        self.slice_slider = matplotlib.widgets.Slider(
+        self.slice_slider = mpl.widgets.Slider(
             ax=axslice,
             label="Slice #",
             valmin=0,
@@ -35,10 +36,10 @@ class Viewer:
             orientation="vertical",
         )
         # Create radio buttons for choosing slicing plane
-        '''axradio = plt.axes([right + 0.05, bot + 0.3, 0.05, height - 0.6])
+        axradio = plt.axes([right + 0.05, bot + 0.3, 0.05, height - 0.6])
         axradio.set_title("Slicing plane")
-        self.radio = matplotlib.widgets.RadioButtons(axradio, ("z", "y", "x"))
-        self.radio.on_clicked(self.change_slicing_plane)'''
+        self.radio = mpl.widgets.RadioButtons(axradio, ("z", "y", "x"))
+        self.radio.on_clicked(self.change_slicing_plane)
 
         # Enable update functions
         self.slice_slider.on_changed(self.update_slice)
@@ -52,7 +53,7 @@ class Viewer:
         self.im.axes.set_ylim(image.shape[0], 0)
         self.im.axes.figure.canvas.draw()
         self.fig.canvas.draw_idle()
-    
+
     def change_slicing_plane(self, val):
         val = "zyx".index(val)
         self.slider_index = val
@@ -61,7 +62,7 @@ class Viewer:
         self.ax.set_title("Slicing plane: " + "xyz"[self.slider_index] + "-axis")
         self.slice_slider.set_val(0)
         self.update_slice(0)
-    
+
     def _create_slice(self, index, val):
         if index == 0:
             return self.stack[val]

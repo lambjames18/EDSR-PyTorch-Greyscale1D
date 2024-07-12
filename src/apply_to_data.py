@@ -1,15 +1,12 @@
 import os
 import utility
-import data
 import model
-import loss
 import option_mod
 import utility2
 from tqdm.auto import tqdm
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
-from skimage import io, transform
+from skimage import io
 import InteractiveView
 
 def prepare(im):
@@ -23,28 +20,32 @@ def prepare(im):
     return im
 
 
+raw_imgs_folder = "D:/Research/WCu/Data/3D/5842WCu_BSE/"
+output_folder = "E:/WCu/5842/"
+data_slice = (slice(0, 400), slice(48, 48+4000), slice(1072, 1072+4000))
+edsr_path = "D:/Research/WCu/Data/SuperRes/model_files/edsr.pt"
+restormer_path = "D:/Research/WCu/Data/SuperRes/model_files/restormer.pt"
+
 # Get the images
-paths = [f for f in os.listdir("D:/Research/WCu/Data/3D/5842WCu_BSE/") if f.endswith(".tif")]
-paths = sorted(paths)[:100]
+paths = [f for f in os.listdir(raw_imgs_folder) if f.endswith(".tif")]
+paths = sorted(paths)
 imgs = []
-imgs = np.array([io.imread("D:/Research/WCu/Data/3D/5842WCu_BSE/" + p)[100:1100, 100:1100] for p in paths])
-print(imgs.shape)
+imgs = np.array([io.imread(raw_imgs_folder + p) for p in paths])
+imgs = imgs[data_slice]
 
 # Get the model
-filePath = ""
 args = option_mod.parser.parse_args([
-    "--dir_data", filePath,
+    "--dir_data", "",
     "--scale", "4",
     "--n_colors", "1",
     "--n_axis", "1",
-    "--imageLim", "10",
     "--batch_size", "2",
     "--n_GPUs", "1",
     "--patch_size", "48",
     "--loss", "1*G",
     "--model", "Restormer",
-    "--EDSR_path", "D:/Research/WCu/Data/SuperRes/model_files/edsr.pt",
-    "--pre_train", "D:/Research/WCu/Data/SuperRes/model_files/restormer.pt",
+    "--EDSR_path", edsr_path,
+    "--pre_train", restormer_path,
     "--save_results",
 ])
 args = option_mod.format_args(args)
@@ -60,9 +61,7 @@ restormer.eval()
 
 # Perform the super resolution
 output = np.zeros((imgs.shape[0] * int(args.scale), imgs.shape[1], imgs.shape[2]), dtype=np.uint8)
-print(output.shape)
 for i in tqdm(range(imgs.shape[1])):
-    im_to_view = imgs[:, i]
     im = np.expand_dims(np.expand_dims(imgs[:, i], axis=0), axis=0)
     im = torch.from_numpy(im).float()
     im = utility2.normalize(im)
@@ -71,8 +70,8 @@ for i in tqdm(range(imgs.shape[1])):
     sr = np.around(utility2.unnormalize(sr[0, 0]).cpu().numpy(), 0).astype(np.uint8)
     output[:, i] = sr
 
-InteractiveView.Viewer(output, "binary_r")
+# InteractiveView.Viewer(output, "binary_r")
 
 # Save the images
 for i in range(output.shape[0]):
-    io.imsave(f"D:/Research/WCu/Data/SuperRes/SR-output/{i}.tif", output[i])
+    io.imsave(f"{output_folder}{i}.tif", output[i])
