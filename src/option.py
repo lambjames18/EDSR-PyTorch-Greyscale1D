@@ -1,4 +1,4 @@
-import argparse
+'''import argparse
 
 parser = argparse.ArgumentParser(description='EDSR and MDSR')
 
@@ -155,5 +155,5 @@ for arg in vars(args):
     if vars(args)[arg] == 'True':
         vars(args)[arg] = True
     elif vars(args)[arg] == 'False':
-        vars(args)[arg] = False
+        vars(args)[arg] = False'''
 

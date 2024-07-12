@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import h5py
 import torch
@@ -32,32 +33,30 @@ def normalize(image):
     maxVal = np.max(image, axis=1)
     return (image - minVal)/(maxVal - minVal)
 
-# h = h5py.File('C:/Users/PollockGroup/Documents/coding/DreamData/5842WCu.dream3d', 'r')  # dream3d is a file format that is identical to an HDF5 file, just with a different name
-h = h5py.File("F:/WCu-Data-SR/8119WCu/dream3D/8119WCu.dream3D", 'r')
-# Get the data
-volume = np.squeeze(h['DataContainers/ImageDataContainer/CellData/BSE'][...])  # we use np.squeeze in order to remove the extra dimension that Dream3D adds to the data
-# setting the y and z axis to be length 1000
-volume = volume[:, 1000:2000, 1000:2000]
-resolution = h['DataContainers/ImageDataContainer/_SIMPL_GEOMETRY/SPACING'][...][::-1]  # Dream3D stores the resolution backwards so we need to flip it
-h.close()
+folder = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/"
+paths = [folder + file for file in os.listdir(folder) if file.endswith('.tif') or file.endswith('.tiff')]
+paths = sorted(paths, key=lambda x: int(x.split('/')[-1].split('.')[0]))
+volume = np.array([io.imread(path) for path in tqdm(paths)])
+# volume = volume[:250, 1000:2000, 1000:2000]
 
-'''z, y, x
-y, z, x
-swapped_vol = np.swapaxes(volume, 0, 1)
-... run SR on swapped_vol[i] ...
-unswapped_vol = np.swapaxes(swapped_vol, 0, 1)'''
+# saving these images to folder 
+# for i in range(len(volume)):
+#     io.imsave(f"F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/dreamTest/{i}.tiff", volume[i])
+# exit()
 
-print("Resolution: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*resolution))
-print("Dimensions: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*np.array(volume.shape) * np.array(resolution)))  # Note that we have much higher resolution in the XY plane than in the Z plane
 print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*volume.shape))
 
 axis = 1
 #stack = np.stack(volume, axis = axis)
 
-args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/", 
+args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/", 
                                      "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48",
                                      "--model", "Restormer", 
-                                     "--EDSR_path", "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/pretrained/restormer/model/model_best.pt"])
+                                     "--EDSR_path", "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/pretrained/restormer/model/model_best.pt"])
+args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/5842WCu_Images/", 
+                                     "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48",
+                                     "--model", "Restormer", 
+                                     "--EDSR_path", "F:/WCu-Data-SR/5842WCu_Images/pretrained/restormer/model/model_best.pt"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -73,11 +72,12 @@ model.eval()
 
 srImages = []
 
-# swapping the axis 
-swapped_vol = np.swapaxes(volume, 0, 1)
+# swapping the axis
+print("Old Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*volume.shape))
+swapped_vol = np.swapaxes(volume, 0, 1)  # Shape (250, 1000, 1000) -> (1000, 250, 1000)
 print("New Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*swapped_vol.shape))
 
-for image_ind in tqdm(range(volume.shape[1])):
+for image_ind in tqdm(range(swapped_vol.shape[0])):
     name = f"Axis1_{image_ind}"
     
     #x = volume[:, image_ind, :]
@@ -114,16 +114,12 @@ for image_ind in tqdm(range(volume.shape[1])):
 
 #srImages = np.array(srImages)
 # swapping the axis back
-srImages = np.swapaxes(srImages, 0, 1)
+srImages = np.swapaxes(srImages, 0, 1)  # Shape (1000, 400, 1000) -> (400, 1000, 1000)
 
-resolution = np.array(resolution) / np.array([int(args.scale), 1, 1])
-
-print("Resolution: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*resolution))
-print("Dimensions: z: {:.3f} µm, y: {:.3f} µm, x: {:.3f} µm".format(*np.array(srImages.shape) * np.array(resolution)))  # Note that we have much higher resolution in the XY plane than in the Z plane
 print("Dimensions: z: {} voxels, y: {} voxels, x: {} voxels".format(*srImages.shape))
 
 for i in range(len(srImages)):
-    io.imsave(f"F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/SR_imageStack/{i}.tiff", srImages[i])
+    io.imsave(f"F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/SR_imageStack/{i}.tiff", srImages[i])
 
 # graphing srImages with a slider 
 '''fig = plt.figure(81234, figsize=(12, 8))
