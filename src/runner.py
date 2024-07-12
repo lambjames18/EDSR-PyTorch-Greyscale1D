@@ -15,8 +15,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 # for testing the Train
-from decimal import Decimal
-import torch.nn.utils as utils
 import matplotlib.pyplot as plt
 
 from trainer_pollock import Trainer
@@ -25,24 +23,40 @@ from sklearn.model_selection import KFold
 import os
 
 # printing out each file in the directory
-filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/"
+filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/"
 #filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
 # args = option_mod.parser.parse_args(["--dir_data", "C:/Users/Pollock-GPU/Documents/jlamb_code/SR-Data", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 # this command line uses a batch size of 8 
-# args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/5842WCu_Images/", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--pre_train", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt"])
+#args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/5842WCu_Images", "--scale", "4", "--imageLim", "50", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--pre_train", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt"])
 # args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--pre_train", filePath + "model/model_best.pt"])
-# args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR","--imageLim", "10", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 #args = option_mod.parser.parse_args(["--dir_data", "C:/Users/PollockGroup/Documents/coding/W Cu-Data-SR", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "1", "--n_GPUs", "1", "--patch_size", "48", "--loss_path", "C:/Users/PollockGroup/Documents/coding/WCu-Data-SR/loss/"])
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 
 # "--EDSR_path", "F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt, "--model", "Restormer""
 # improved_contrast model is better than the original contrast model
+#args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1",
+#                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer", "--imageLim", "10", 
+#                                     "--EDSR_path", filePath + "/pretrained/improved_contrast/model/model_best.pt"])
+
+# testing the restormer model
+'''args =  option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
+                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer",
+                                     "--EDSR_path", filePath + "/pretrained/restormer/model/model_best.pt", 
+                                     "--pre_train", filePath + "/pretrained/restormer/model/model_best.pt"])'''
+
+# retraining restormer on all_phases_greyscale
+# 1. training edsr on all_phases_greyscale
+'''args =  option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1",
+                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "EDSR"])'''
+
+# 2. training restormer on all_phases_greyscale with pretrain as edsr
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1",
-                                     "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer", "--imageLim", "10", 
-                                     "--EDSR_path", filePath + "/pretrained/improved_contrast/model/model_best.pt"])
+                                        "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer",
+                                        "--EDSR_path", filePath + "/pretrained/EDSR/model/model_best.pt"])
+
 
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
@@ -96,7 +110,7 @@ print("Setup successful")
 
 trainer = Trainer(args, loader, _model, _loss, trainInd, testInd, epoch_limit, checkpoint)
 # beginning with running the training
-trainer.run(test_only= True)
+trainer.run()
 
 """
 ### testing the model and getting the output

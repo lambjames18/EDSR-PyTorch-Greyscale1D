@@ -52,14 +52,12 @@ class SRData(data.Dataset):
         
         print("Reading images from", self.apath)
         for file in os.listdir(self.apath):
-            if file.endswith('.tif'):
+            if file.endswith('.tif') or file.endswith('.tiff'):
                 imgs.append(io.imread(os.path.join(self.apath, file)))
             if len(imgs) >= self.args.imageLim and self.args.imageLim != 0:
                 break
         if len(imgs) == 0:
             raise ValueError("No images found in the directory. Please check the path.")
-
-        print("Finished reading images")
 
         # fill the high res and low res
         row_size = min([img.shape[0] for img in imgs])
@@ -75,14 +73,6 @@ class SRData(data.Dataset):
             img_down = transform.downscale_local_mean(img, (int(self.args.scale),1))
             img_down = np.around(255 * (img_down - img_down.min())/(img_down.max() - img_down.min())).astype('uint8')
             lr_list.append(img_down)
-            # img_split = [img[:2000, :2000], img[:2000, 2000:4000], img[2000:4000, :2000], img[2000:4000, 2000:4000]]
-            # for j in range(4):
-            #     img_temp = img_split[j]
-            #     img_temp_down = transform.downscale_local_mean(img_temp, (int(self.args.scale),1))
-            #     img_temp_down = np.around(255 * (img_temp_down - img_temp_down.min())/(img_temp_down.max() - img_temp_down.min())).astype('uint8')
-            #     hr_list.append(img_temp)
-            #     lr_list.append(img_temp_down)
-        print("Finished filling HR and LR lists")
         return hr_list, lr_list
 
     def __getitem__(self, idx):

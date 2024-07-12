@@ -23,7 +23,7 @@ parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
 parser.add_argument('--data_train', type=str, default='pollockData',
                     help='train dataset name')
-parser.add_argument('--data_test', type=str, default='pollockData',
+parser.add_argument('--data_test', type=str, default='SRData',
                     help='test dataset name')
 parser.add_argument('--data_range', type=str, default='1-800/801-810',
                     help='train/test data range')
@@ -109,6 +109,8 @@ parser.add_argument('--weight_decay', type=float, default=0,
                     help='weight decay')
 parser.add_argument('--gclip', type=float, default=0,
                     help='gradient clipping threshold (0 = no clipping)')
+parser.add_argument('--improve_contrast', type=bool, default=True,
+                    help='normalize the input data')
 
 # Loss specifications
 # Losses can be chained together by using + symbol (i.e. 1*L1+1*MSE does both L1 and MSE with a weight of 1 for each)

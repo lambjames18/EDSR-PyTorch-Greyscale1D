@@ -58,8 +58,8 @@ class Trainer():
             for j in range(self.args.batch_size):
                 lr, hr = self.loaderTot.dataset[self.trainInd[i*self.args.batch_size+j]]
 
-                lr = utility.normalize(lr)
-                hr = utility.normalize(hr)
+                lr = utility.normalize(lr, self.args.improve_contrast)
+                hr = utility.normalize(hr, self.args.improve_contrast)
 
                 lr_batch.append(lr)
                 hr_batch.append(hr)
@@ -74,8 +74,8 @@ class Trainer():
             lr = torch.unsqueeze(lr,0)
             hr = torch.unsqueeze(hr,0)
 
-            lr = utility.normalize(lr)
-            hr = utility.normalize(hr)
+            lr = utility.normalize(lr, self.args.improve_contrast)
+            hr = utility.normalize(hr, self.args.improve_contrast)
             
             test_files.append((lr,hr))
         
@@ -279,7 +279,6 @@ class Trainer():
 
         torch.set_grad_enabled(True)
 
-    print("Testing finished.")
 
     def prepare(self, lr, hr):
          # defining the device without the parallel processing in the given function
