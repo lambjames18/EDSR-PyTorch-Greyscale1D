@@ -23,8 +23,8 @@ from sklearn.model_selection import KFold
 import os
 
 # printing out each file in the directory
-filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/"
-#filePath = "F:/WCu-Data-SR/5842WCu_Images/"
+#filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/"
+filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
@@ -48,6 +48,7 @@ filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale
                                      "--pre_train", filePath + "/pretrained/restormer/model/model_best.pt"])'''
 
 # retraining restormer on all_phases_greyscale
+
 # 1. training edsr on all_phases_greyscale
 '''args =  option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1",
                                      "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "EDSR"])'''
