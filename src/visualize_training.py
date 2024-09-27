@@ -38,7 +38,7 @@ def prepare(lr, hr, args):
     hr = hr.to(device)
     return lr, hr
 
-args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
+args = option_mod.parser.parse_args(["--dir_data", "F:/WCu-Data-SR/5842WCu_Spall", "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--batch_size", "8", "--n_GPUs", "1", "--patch_size", "48"])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True

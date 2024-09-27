@@ -41,9 +41,9 @@ def calc_psnr(sr, hr, scale=4, data_range=None):
 
 
 # Get the image to look at
-# img = io.imread("F:/WCu-Data-SR/5842WCu_Images/Slice000.tif")[:400, :400]
-filePath1 = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/"
-img = io.imread(filePath1 + "3.tif")[100:1100, 100:1100]
+img = io.imread("F:/WCu-Data-SR/8119WCu/BSE/images/Raw/8.tif")[300:700, 300:700]
+#filePath1 = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/"
+#img = io.imread(img + "3.tif")[100:1100, 100:1100]
 img_down = transform.downscale_local_mean(img, (4, 1))
 img = np.expand_dims(np.expand_dims(img, axis=0), axis=0)
 img_down = np.expand_dims(np.expand_dims(img_down, axis=0), axis=0)
@@ -52,15 +52,17 @@ img_down = torch.from_numpy(img_down).float()
 img = utility.normalize(img)
 img_down = utility.normalize(img_down)
 
-#filePath = "F:/WCu-Data-SR/5842WCu_Images/"
-filePath2 = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/"
+filePath = "F:/WCu-Data-SR/8119WCu/BSE/"
+#filePath2 = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/W_phase_only_(greyscale)/"
 #"F:/WCu-Data-SR/5842WCu_Images/MaxPool_MSE_100E_GLoss/model/model_best.pt" 
-edsrPath = filePath2 + "/pretrained/restormer/model/model_best.pt"
+edsrPath = "F:/WCu-Data-SR/8119WCu/BSE/train/EDSR/model/model_best.pt" 
+#edsrPath = filePath2 + "/pretrained/restormer/model/model_best.pt"
 # "F:/WCu-Data-SR/5842WCu_Images/model/model_best.pt"
-preTrain = edsrPath
+#preTrain = edsrPath
+preTrain = "F:/WCu-Data-SR/8119WCu/BSE/train/Restormer/model/model_best.pt"
 #preTrain = filePath + "/pretrained/improved_contrast/model/model_best.pt"
 
-args = option_mod.parser.parse_args(["--dir_data", filePath2, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
+args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
                                      "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer",
                                      "--EDSR_path", edsrPath, "--pre_train", preTrain])
 args = option_mod.format_args(args)
@@ -78,14 +80,14 @@ lr, hr = prepare(img_down, img, args)
 sr = restormer(lr, int(args.scale))
 print("Restormer PSNR:", calc_psnr(sr, hr).item())
 
-io.imsave(filePath1 + "restormerTest/SR-Restormer.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
-io.imsave(filePath1 + "/restormerTest/HR-Restormer.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
+io.imsave(filePath + "Restormer_Test/SR-Restormer.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
+#io.imsave(filePath + "/restormerTest/HR-Restormer.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
 
 
 #filePath = "F:/WCu-Data-SR/5842WCu_Images/"
-'''args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
+args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1", "--imageLim", "10",
                                      "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "EDSR",
-                                     "--pre_train", preTrain])
+                                     "--pre_train", edsrPath])
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True
@@ -101,8 +103,6 @@ lr, hr = prepare(img_down, img, args)
 sr = edsr(lr, int(args.scale))
 print("EDSR PSNR:", calc_psnr(sr, hr).item())
 
-io.imsave(filePath + "/restormerTest/SR-EDSR.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
-io.imsave(filePath + "/restormerTest/HR-EDSR.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
+io.imsave(filePath + "/Restormer_Test/SR-EDSR.png", utility.unnormalize(sr[0, 0]).cpu().numpy())
+io.imsave(filePath + "/Restormer_Test/HR.png", utility.unnormalize(hr[0, 0]).cpu().numpy())
 
-# printing out the working directory
-print("Current Working Directory: ", os.getcwd())'''

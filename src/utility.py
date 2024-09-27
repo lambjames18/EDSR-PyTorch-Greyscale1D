@@ -158,9 +158,6 @@ class checkpoint():
             for v, p in zip(save_list, postfix):
                 
                 filename = p + f'{index}'
-                
-                #image_array = np.squeeze(v.cpu().numpy())
-                #image_array = np.around(255 * image_array).astype(np.uint8)
 
                 # unnormalize the image
                 image_array = unnormalize(v).cpu().numpy()
@@ -211,11 +208,12 @@ def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
     return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
 
+# adding 1e-6 to all 0 values
 def normalize(image, improve_contrast=True):
-        if improve_contrast:
-            return 2*((image - image.min())/(image.max() - image.min())) - 1
-        else:
-            return 2*(image/image.max()) - 1
+    if improve_contrast:
+        return 2*((image - image.min())/(image.max() - image.min())) - 1
+    else:
+        return 2*(image/image.max()) - 1
         
 def unnormalize(image, bit_depth=8):
     image = (image - image.min())/(image.max() - image.min())

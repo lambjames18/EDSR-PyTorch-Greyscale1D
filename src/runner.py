@@ -23,8 +23,8 @@ from sklearn.model_selection import KFold
 import os
 
 # printing out each file in the directory
-#filePath = "F:/WCu-Data-SR/8119WCu/8119WCusegmenteddatasets/all_phases_greyscale/"
-filePath = "F:/WCu-Data-SR/5842WCu_Images/"
+filePath = "F:/WCu-Data-SR/5842WCu_Spall/total_set/"
+#filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 
 # Act like this is the command line but bypass the commandline version so we can use a python script
 #args = option_mod.parser.parse_args(["--dir_data", "/Users/anayakhan/Desktop/Pollock/dataset/pollockData", "--scale", "4", "--save_results", "--n_colors", "1", "--n_axis", "1", "--batch_size", "4"])
@@ -56,9 +56,10 @@ filePath = "F:/WCu-Data-SR/5842WCu_Images/"
 # 2. training restormer on all_phases_greyscale with pretrain as edsr
 args = option_mod.parser.parse_args(["--dir_data", filePath, "--scale", "4", "--save_results" ,"--n_colors", "1", "--n_axis", "1",
                                         "--batch_size", "2", "--n_GPUs", "1", "--patch_size", "48", "--loss", "1*G", "--model", "Restormer",
-                                        "--EDSR_path", filePath + "/pretrained/EDSR/model/model_best.pt"])
+                                        "--EDSR_path", filePath + "EDSR/model/model_best.pt"])
 
-
+# changed the validation to every batch
+# in normalization, add 1e-6 to all 0 values
 args = option_mod.format_args(args)
 if not args.cpu and torch.cuda.is_available():
     USE_GPU = True

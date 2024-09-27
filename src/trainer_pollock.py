@@ -61,6 +61,10 @@ class Trainer():
                 lr = utility.normalize(lr, self.args.improve_contrast)
                 hr = utility.normalize(hr, self.args.improve_contrast)
 
+                # to remove the zero values in the images   
+                lr = lr + 1e-6
+                hr = hr + 1e-6
+
                 lr_batch.append(lr)
                 hr_batch.append(hr)
             lr_stack = torch.stack(lr_batch)
@@ -148,6 +152,12 @@ class Trainer():
                     
                 timer_data.tic()
 
+                # testing purposes
+                if loss.cpu().detach().numpy() == np.nan:
+                    print("Loss is nan")
+                    print(batch_idx)
+                    break
+
                 # logging the training
                 pbar.set_postfix({"Loss": loss.cpu().detach().numpy()})
                 self.trainLoss.append(loss.cpu().detach().numpy())
@@ -198,11 +208,11 @@ class Trainer():
 
                 self.validatePSNRtot.append(psnr)
                 self.validateLossTot.append(loss.cpu().numpy())
-                if batch_idx == 0:
-                    sr_numpy = np.squeeze(utility.unnormalize(sr[0]).cpu().numpy())
-                    hr_numpy = np.squeeze(utility.unnormalize(hr[0]).cpu().numpy())
-                    io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_SR.tiff'), sr_numpy.astype(np.uint8))
-                    io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_HR.tiff'), hr_numpy.astype(np.uint8))
+                #if batch_idx == 0:
+                sr_numpy = np.squeeze(utility.unnormalize(sr[0]).cpu().numpy())
+                hr_numpy = np.squeeze(utility.unnormalize(hr[0]).cpu().numpy())
+                io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_SR.tiff'), sr_numpy.astype(np.uint8))
+                io.imsave(os.path.join(self.loss_path, f'validation_{epoch}_HR.tiff'), hr_numpy.astype(np.uint8))
 
         # adding the average 
         self.epoch_validationLoss.append(np.average(self.validateLossTot))

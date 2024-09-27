@@ -49,7 +49,6 @@ class SRData(data.Dataset):
         hr_list = []
         lr_list = []
 
-        
         print("Reading images from", self.apath)
         for file in os.listdir(self.apath):
             if file.endswith('.tif') or file.endswith('.tiff'):
